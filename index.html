@@ -340,7 +340,7 @@ const OUTCOME_META = [
 // HELPERS
 // ================================================================
 function fmtPct(v,dec=1){return v==null?'—':(v*100).toFixed(dec)+'%'}
-function fmtNum(v){if(v==null)return '—';const n=Math.round(v);return n>=10000?(n/1000).toFixed(1)+'k':n.toLocaleString();}
+function fmtNum(v){if(v==null)return '—';const n=Math.round(v);if(n>=1000000)return (n/1000000).toFixed(1)+'M';return n>=10000?(n/1000).toFixed(1)+'k':n.toLocaleString();}
 function mlabel(yr,mo){return MONTH_NAMES[mo-1]+' '+String(yr).slice(2)}
 function pctColor(v,good=0.85,ok=0.70){if(v==null)return '';if(v>=good)return 'green';if(v>=ok)return 'amber';return 'red';}
 function negPctColor(v,warn=0.10,bad=0.20){if(v==null)return '';if(v>=bad)return 'red';if(v>=warn)return 'amber';return 'green';}
@@ -695,15 +695,16 @@ function renderTab1(){
 
   const latestYM=data.reduce((mx,r)=>r.gr>0||r.al>0?Math.max(mx,r._key):mx,0);
   const latestData=data.filter(r=>r._key===latestYM);
-  const totalConv=latestData.reduce((s,r)=>s+r.al,0);
   const overall=weightedAgg(data);
 
-  const totalReviewed=latestData.reduce((s,r)=>s+r.gr,0);
-  const periodLabel=latestYM?mlabel(Math.floor(latestYM/100),latestYM%100):'';
-  document.getElementById('t1-kpi-total').textContent=fmtNum(totalConv);
-  document.getElementById('t1-kpi-total-sub').textContent=`All traffic · ${periodLabel}`;
-  document.getElementById('t1-kpi-reviewed').textContent=fmtNum(totalReviewed);
-  document.getElementById('t1-kpi-reviewed-sub').textContent=`Sampled for QA · ${periodLabel}`;
+  // All four KPIs reflect the full selected period (From–To), for consistency
+  const fromLabel=mlabel(Math.floor(fromYM/100),fromYM%100);
+  const toLabel=mlabel(Math.floor(toYM/100),toYM%100);
+  const rangeLabel=fromLabel===toLabel?fromLabel:`${fromLabel} – ${toLabel}`;
+  document.getElementById('t1-kpi-total').textContent=fmtNum(overall.all);
+  document.getElementById('t1-kpi-total-sub').textContent=`All traffic · ${rangeLabel}`;
+  document.getElementById('t1-kpi-reviewed').textContent=fmtNum(overall.rev);
+  document.getElementById('t1-kpi-reviewed-sub').textContent=`Sampled for QA · ${rangeLabel}`;
   const pvEl=document.getElementById('t1-kpi-pv');
   pvEl.textContent=fmtPct(overall.pv);
   pvEl.className='kpi-value '+pctColor(overall.pv);
@@ -798,15 +799,17 @@ function renderTab2(){
 
   const latestYW=data.reduce((mx,r)=>r.gr>0||r.al>0?Math.max(mx,r._key):mx,0);
   const latestData=data.filter(r=>r._key===latestYW);
-  const totalConv=latestData.reduce((s,r)=>s+r.al,0);
   const overall=weightedAgg(data);
 
-  const totalReviewed2=latestData.reduce((s,r)=>s+r.gr,0);
-  const weekLabel=WEEKLY.find(r=>r._key===latestYW)?.wl||'';
-  document.getElementById('t2-kpi-total').textContent=fmtNum(totalConv);
-  document.getElementById('t2-kpi-total-sub').textContent=`All traffic · ${weekLabel}`;
-  document.getElementById('t2-kpi-reviewed').textContent=fmtNum(totalReviewed2);
-  document.getElementById('t2-kpi-reviewed-sub').textContent=`Sampled for QA · ${weekLabel}`;
+  // All four KPIs reflect the full selected period (From–To), for consistency
+  const fromLabel=WEEKLY.find(r=>r._key===fromYW)?.wl;
+  const toLabel=WEEKLY.find(r=>r._key===toYW)?.wl;
+  const rangeLabel=(fromLabel&&toLabel)?(fromLabel===toLabel?fromLabel:`${fromLabel} – ${toLabel}`):'';
+  const scope=rangeLabel?` · ${rangeLabel}`:'';
+  document.getElementById('t2-kpi-total').textContent=fmtNum(overall.all);
+  document.getElementById('t2-kpi-total-sub').textContent=`All traffic${scope}`;
+  document.getElementById('t2-kpi-reviewed').textContent=fmtNum(overall.rev);
+  document.getElementById('t2-kpi-reviewed-sub').textContent=`Sampled for QA${scope}`;
   const pvEl=document.getElementById('t2-kpi-pv');
   pvEl.textContent=fmtPct(overall.pv);
   pvEl.className='kpi-value '+pctColor(overall.pv);

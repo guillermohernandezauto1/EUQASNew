@@ -83,8 +83,8 @@ canvas.area{max-height:300px}
 <div id="t1" class="tab-content active">
   <div class="filters">
     <div class="filter-group">
-      <label>Countries</label>
-      <div class="country-picker" id="t1-countries"></div>
+      <label>Country</label>
+      <select id="t1-countries"></select>
     </div>
     <div class="filter-group">
       <label>Flow</label>
@@ -141,8 +141,8 @@ canvas.area{max-height:300px}
 <div id="t2" class="tab-content">
   <div class="filters">
     <div class="filter-group">
-      <label>Countries</label>
-      <div class="country-picker" id="t2-countries"></div>
+      <label>Country</label>
+      <select id="t2-countries"></select>
     </div>
     <div class="filter-group">
       <label>Flow</label>
@@ -203,8 +203,8 @@ canvas.area{max-height:300px}
 <div id="t3" class="tab-content">
   <div class="filters">
     <div class="filter-group">
-      <label>Countries</label>
-      <div class="country-picker" id="t3-countries"></div>
+      <label>Country</label>
+      <select id="t3-countries"></select>
     </div>
     <div class="filter-group">
       <label>Granularity</label>
@@ -244,8 +244,8 @@ canvas.area{max-height:300px}
 <div id="t4" class="tab-content">
   <div class="filters">
     <div class="filter-group">
-      <label>Countries</label>
-      <div class="country-picker" id="t4-countries"></div>
+      <label>Country</label>
+      <select id="t4-countries"></select>
     </div>
     <div class="filter-group">
       <label>Granularity</label>
@@ -603,38 +603,23 @@ function renderDeepDive(tab){
 // ================================================================
 // COUNTRY/FLOW PICKERS
 // ================================================================
-// Country picker — chips. Click behaviour:
-//  • from the default "all selected" state, a click SELECTS ONLY that country (solo)
-//  • further clicks add / remove individual countries (multi-select for comparison)
-//  • clicking the last remaining country restores "all"
-function initCountryPicker(pickerEl,state,onChange){
-  pickerEl.innerHTML='';
-  const chips={};
-  function paint(){
-    for(const rg of REGIONS){
-      const chip=chips[rg],on=state.regions.includes(rg);
-      chip.className='country-chip '+(on?'selected':'unselected');
-      if(on){chip.style.background=REGION_COLORS[rg]+'33';chip.style.color=REGION_COLORS[rg];chip.style.borderColor=REGION_COLORS[rg]+'88';}
-      else{chip.style.background='';chip.style.color='';chip.style.borderColor='';}
-    }
-  }
+// Country picker — single-select dropdown ("All Countries" + each country).
+function initCountryPicker(selEl,state,onChange){
+  selEl.innerHTML='';
+  const optAll=document.createElement('option');
+  optAll.value='__all__';optAll.textContent='All Countries';
+  selEl.appendChild(optAll);
   for(const rg of REGIONS){
-    const chip=document.createElement('span');
-    chip.textContent=rg;
-    chips[rg]=chip;
-    chip.onclick=()=>{
-      const allOn=state.regions.length===REGIONS.length;
-      if(allOn){state.regions=[rg];}
-      else if(state.regions.includes(rg)){
-        state.regions=state.regions.length>1?state.regions.filter(x=>x!==rg):[...REGIONS];
-      } else {state.regions.push(rg);}
-      paint();
-      onChange();
-    };
-    pickerEl.appendChild(chip);
+    const o=document.createElement('option');
+    o.value=rg;o.textContent=rg;
+    selEl.appendChild(o);
   }
-  paint();
-  state._paintRegions=paint;
+  selEl.value='__all__';
+  selEl.onchange=()=>{
+    state.regions=selEl.value==='__all__'?[...REGIONS]:[selEl.value];
+    onChange();
+  };
+  state._paintRegions=()=>{selEl.value='__all__';};
 }
 
 // Flow picker — single-select dropdown ("All Flows" + each flow).
@@ -874,34 +859,22 @@ function agg11LabsByKey(rows){
   });
 }
 
-function initOBCountryPicker(pickerEl,state,onChange){
-  pickerEl.innerHTML='';
-  const chips={};
-  function paint(){
-    for(const rg of ELEVENLABS_COUNTRIES){
-      const chip=chips[rg],c=ELEVENLABS_COUNTRY_COLORS[rg],on=state.countries.includes(rg);
-      chip.className='country-chip '+(on?'selected':'unselected');
-      if(on){chip.style.background=c+'33';chip.style.color=c;chip.style.borderColor=c+'88';}
-      else{chip.style.background='';chip.style.color='';chip.style.borderColor='';}
-    }
-  }
+function initOBCountryPicker(selEl,state,onChange){
+  selEl.innerHTML='';
+  const optAll=document.createElement('option');
+  optAll.value='__all__';optAll.textContent='All Countries';
+  selEl.appendChild(optAll);
   for(const rg of ELEVENLABS_COUNTRIES){
-    const chip=document.createElement('span');
-    chip.textContent=rg;
-    chips[rg]=chip;
-    chip.onclick=()=>{
-      const allOn=state.countries.length===ELEVENLABS_COUNTRIES.length;
-      if(allOn){state.countries=[rg];}
-      else if(state.countries.includes(rg)){
-        state.countries=state.countries.length>1?state.countries.filter(x=>x!==rg):[...ELEVENLABS_COUNTRIES];
-      } else {state.countries.push(rg);}
-      paint();
-      onChange();
-    };
-    pickerEl.appendChild(chip);
+    const o=document.createElement('option');
+    o.value=rg;o.textContent=rg;
+    selEl.appendChild(o);
   }
-  paint();
-  state._paintCountries=paint;
+  selEl.value='__all__';
+  selEl.onchange=()=>{
+    state.countries=selEl.value==='__all__'?[...ELEVENLABS_COUNTRIES]:[selEl.value];
+    onChange();
+  };
+  state._paintCountries=()=>{selEl.value='__all__';};
 }
 
 function get11labsRows(gran,countries){

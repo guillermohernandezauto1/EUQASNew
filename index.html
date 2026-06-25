@@ -137,10 +137,7 @@ canvas.area{max-height:300px}
   <div class="deep-dive">
     <div class="deep-dive-title">Deep Dive — <span id="t1-dd-scope">All countries</span> <span style="font-weight:400;color:#94a3b8">· follows the filters above</span></div>
     <div class="stacked-chart-box"><div class="chart-title">Quality Distribution Over Time</div><canvas id="t1-dd-stacked" class="tall"></canvas><div class="chart-note">100% = reviewed conversations only</div></div>
-    <div class="chart-grid-2">
-      <div class="chart-box"><div class="chart-title">% Reviewed Over Time</div><canvas id="t1-dd-rv"></canvas></div>
-      <div class="chart-box"><div class="chart-title">Conversation Volume Over Time</div><canvas id="t1-dd-vol"></canvas></div>
-    </div>
+    <div class="chart-box-full"><div class="chart-title">Conversation Volume Over Time</div><canvas id="t1-dd-vol"></canvas></div>
   </div>
 </div>
 
@@ -195,10 +192,7 @@ canvas.area{max-height:300px}
   <div class="deep-dive">
     <div class="deep-dive-title">Deep Dive — <span id="t2-dd-scope">All countries</span> <span style="font-weight:400;color:#94a3b8">· follows the filters above</span></div>
     <div class="stacked-chart-box"><div class="chart-title">Quality Distribution Over Time</div><canvas id="t2-dd-stacked" class="tall"></canvas><div class="chart-note">100% = reviewed conversations only</div></div>
-    <div class="chart-grid-2">
-      <div class="chart-box"><div class="chart-title">% Reviewed Over Time</div><canvas id="t2-dd-rv"></canvas></div>
-      <div class="chart-box"><div class="chart-title">Conversation Volume Over Time</div><canvas id="t2-dd-vol"></canvas></div>
-    </div>
+    <div class="chart-box-full"><div class="chart-title">Conversation Volume Over Time</div><canvas id="t2-dd-vol"></canvas></div>
   </div>
 </div>
 
@@ -595,13 +589,6 @@ function renderDeepDive(tab){
   }));
   mkStackedBar(`${tab}-dd-stacked`,labels,ds);
 
-  mkLine(`${tab}-dd-rv`,labels,[{
-    label:'% Reviewed',
-    data:byPeriod.map(p=>p.rv),
-    _reviewed:byPeriod.map(p=>p.rev),
-    _total:byPeriod.map(p=>p.all),
-    borderColor:'#38bdf8',backgroundColor:'#38bdf822',fill:true,borderWidth:2,pointRadius:3
-  }]);
   const volColor=(!state.euAvg&&state.regions.length===1)?REGION_COLORS[state.regions[0]]:'#3b82f6';
   mkBarVol(`${tab}-dd-vol`,labels,byPeriod.map(p=>p.all),volColor);
 }
@@ -723,15 +710,16 @@ function renderTab1(){
     lineds=[{label:'EU AVG',data:allKeys.map(k=>map[k]?.rv??null),
       _reviewed:allKeys.map(k=>map[k]?.rev??null),
       _total:allKeys.map(k=>map[k]?.all??null),
-      borderColor:'#1e293b',backgroundColor:'transparent',borderWidth:2,pointRadius:3,spanGaps:false}];
+      borderColor:'#38bdf8',backgroundColor:'#38bdf822',fill:true,borderWidth:2,pointRadius:3,spanGaps:false}];
   } else {
+    const single=regions.length===1;
     lineds=regions.map(rg=>{
       const byMo=aggByKey(data.filter(r=>r.rg===rg),r=>r._key);
       const map=Object.fromEntries(byMo.map(p=>[+p._k,p]));
       return{label:rg,data:allKeys.map(k=>map[k]?.rv??null),
         _reviewed:allKeys.map(k=>map[k]?.rev??null),
         _total:allKeys.map(k=>map[k]?.all??null),
-        borderColor:REGION_COLORS[rg],backgroundColor:'transparent',borderWidth:2,pointRadius:3,spanGaps:false};
+        borderColor:REGION_COLORS[rg],backgroundColor:REGION_COLORS[rg]+'22',fill:single,borderWidth:2,pointRadius:3,spanGaps:false};
     });
   }
   mkLine('t1-line',labels,lineds);
@@ -810,15 +798,16 @@ function renderTab2(){
     lineds=[{label:'EU AVG',data:allKeys.map(k=>map[k]?.rv??null),
       _reviewed:allKeys.map(k=>map[k]?.rev??null),
       _total:allKeys.map(k=>map[k]?.all??null),
-      borderColor:'#1e293b',backgroundColor:'transparent',borderWidth:2,pointRadius:3,spanGaps:false}];
+      borderColor:'#38bdf8',backgroundColor:'#38bdf822',fill:true,borderWidth:2,pointRadius:3,spanGaps:false}];
   } else {
+    const single=regions.length===1;
     lineds=regions.map(rg=>{
       const byWk=aggByKey(data.filter(r=>r.rg===rg),r=>r._key);
       const map=Object.fromEntries(byWk.map(p=>[+p._k,p]));
       return{label:rg,data:allKeys.map(k=>map[k]?.rv??null),
         _reviewed:allKeys.map(k=>map[k]?.rev??null),
         _total:allKeys.map(k=>map[k]?.all??null),
-        borderColor:REGION_COLORS[rg],backgroundColor:'transparent',borderWidth:2,pointRadius:3,spanGaps:false};
+        borderColor:REGION_COLORS[rg],backgroundColor:REGION_COLORS[rg]+'22',fill:single,borderWidth:2,pointRadius:3,spanGaps:false};
     });
   }
   mkLine('t2-line',labels,lineds);

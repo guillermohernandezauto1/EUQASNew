@@ -5,62 +5,63 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EU QAs All Sources</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,sans-serif;font-size:13px;background:#0f1117;color:#e2e8f0;min-height:100vh}
-.header{padding:16px 24px;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:12px}
-.header h1{font-size:18px;font-weight:600;color:#f1f5f9}
+body{font-family:system-ui,sans-serif;font-size:13px;background:#ffffff;color:#1e293b;min-height:100vh}
+.header{padding:16px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:12px}
+.header h1{font-size:18px;font-weight:600;color:#0f172a}
 .header .sub{font-size:12px;color:#64748b}
-.tabs{display:flex;gap:0;border-bottom:1px solid #1e293b;padding:0 24px;background:#0f1117}
+.tabs{display:flex;gap:0;border-bottom:1px solid #e2e8f0;padding:0 24px;background:#ffffff}
 .tab-btn{padding:10px 18px;font-size:12px;font-weight:500;color:#64748b;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;letter-spacing:.02em}
-.tab-btn:hover{color:#94a3b8}
-.tab-btn.active{color:#38bdf8;border-bottom-color:#38bdf8}
+.tab-btn:hover{color:#334155}
+.tab-btn.active{color:#2563eb;border-bottom-color:#2563eb}
 .tab-content{display:none;padding:20px 24px 40px}
 .tab-content.active{display:block}
-.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding:14px 16px;background:#161b27;border:1px solid #1e293b;border-radius:8px;margin-bottom:18px}
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding:14px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:18px}
 .filter-group{display:flex;flex-direction:column;gap:4px}
 .filter-group label{font-size:11px;color:#64748b;font-weight:500;text-transform:uppercase;letter-spacing:.05em}
-.filter-group select,.filter-group input{background:#0f1117;border:1px solid #334155;color:#e2e8f0;padding:5px 8px;border-radius:4px;font-size:12px;min-width:90px}
-.filter-group select:focus,.filter-group input:focus{outline:none;border-color:#38bdf8}
+.filter-group select,.filter-group input{background:#ffffff;border:1px solid #cbd5e1;color:#1e293b;padding:5px 8px;border-radius:4px;font-size:12px;min-width:90px}
+.filter-group select:focus,.filter-group input:focus{outline:none;border-color:#2563eb}
 .country-picker{display:flex;flex-wrap:wrap;gap:4px;max-width:300px}
 .flow-picker{display:flex;flex-wrap:wrap;gap:4px;max-width:600px}
 .country-chip{padding:3px 8px;border-radius:12px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .1s;user-select:none}
 .country-chip.selected{border-color:transparent}
-.country-chip.unselected{background:#1e293b!important;color:#64748b!important;border-color:#334155}
-.btn-reset{padding:5px 12px;background:#1e293b;border:1px solid #334155;color:#94a3b8;border-radius:4px;cursor:pointer;font-size:12px;transition:all .1s}
-.btn-reset:hover{background:#334155;color:#e2e8f0}
-.toggle-11labs{padding:5px 12px;background:#1e293b;border:1px solid #334155;color:#94a3b8;border-radius:4px;cursor:pointer;font-size:12px;transition:all .1s;display:none}
-.toggle-11labs.active{background:#0c2a3e;border-color:#38bdf8;color:#38bdf8}
+.country-chip.unselected{background:#f1f5f9!important;color:#94a3b8!important;border-color:#cbd5e1}
+.btn-reset{padding:5px 12px;background:#f1f5f9;border:1px solid #cbd5e1;color:#475569;border-radius:4px;cursor:pointer;font-size:12px;transition:all .1s}
+.btn-reset:hover{background:#e2e8f0;color:#1e293b}
+.toggle-11labs{padding:5px 12px;background:#f1f5f9;border:1px solid #cbd5e1;color:#475569;border-radius:4px;cursor:pointer;font-size:12px;transition:all .1s;display:none}
+.toggle-11labs.active{background:#dbeafe;border-color:#2563eb;color:#2563eb}
 .kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
 .kpi-row-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
-.kpi{background:#161b27;border:1px solid #1e293b;border-radius:8px;padding:16px 18px}
+.kpi{background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:16px 18px;box-shadow:0 1px 2px rgba(15,23,42,0.04)}
 .kpi-label{font-size:11px;color:#64748b;font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
-.kpi-value{font-size:24px;font-weight:700;color:#f1f5f9;line-height:1.2}
-.kpi-value.green{color:#22c55e}
-.kpi-value.amber{color:#f59e0b}
-.kpi-value.red{color:#ef4444}
-.kpi-value.blue{color:#38bdf8}
-.kpi-sub{font-size:11px;color:#475569;margin-top:4px}
+.kpi-value{font-size:24px;font-weight:700;color:#0f172a;line-height:1.2}
+.kpi-value.green{color:#16a34a}
+.kpi-value.amber{color:#d97706}
+.kpi-value.red{color:#dc2626}
+.kpi-value.blue{color:#2563eb}
+.kpi-sub{font-size:11px;color:#94a3b8;margin-top:4px}
 .chart-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
-.chart-box{background:#161b27;border:1px solid #1e293b;border-radius:8px;padding:14px}
-.chart-box-full{background:#161b27;border:1px solid #1e293b;border-radius:8px;padding:14px;margin-bottom:20px}
-.chart-title{font-size:12px;font-weight:600;color:#94a3b8;margin-bottom:10px}
+.chart-box{background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:14px;box-shadow:0 1px 2px rgba(15,23,42,0.04)}
+.chart-box-full{background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:14px;margin-bottom:20px;box-shadow:0 1px 2px rgba(15,23,42,0.04)}
+.chart-title{font-size:12px;font-weight:600;color:#475569;margin-bottom:10px}
 canvas{max-height:260px}
 canvas.tall{max-height:320px}
 canvas.area{max-height:300px}
-.heatmap-section{background:#161b27;border:1px solid #1e293b;border-radius:8px;padding:14px;margin-bottom:20px;overflow-x:auto}
+.heatmap-section{background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:14px;margin-bottom:20px;overflow-x:auto;box-shadow:0 1px 2px rgba(15,23,42,0.04)}
 .heatmap-controls{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .heatmap-table{width:100%;border-collapse:collapse;font-size:11px;white-space:nowrap}
-.heatmap-table th{padding:5px 8px;text-align:center;color:#64748b;font-weight:500;border-bottom:1px solid #1e293b}
-.heatmap-table td{padding:5px 8px;text-align:center;border:1px solid #1e293b}
-.heatmap-table td:first-child{font-weight:600;text-align:left;color:#94a3b8;background:#0f1117}
-.hm-empty{color:#334155}
-.deep-dive{background:#0f1117;border:1px solid #1e293b;border-radius:8px;padding:16px;margin-top:20px}
-.deep-dive-title{font-size:13px;font-weight:600;color:#94a3b8;margin-bottom:12px}
+.heatmap-table th{padding:5px 8px;text-align:center;color:#64748b;font-weight:500;border-bottom:1px solid #e2e8f0}
+.heatmap-table td{padding:5px 8px;text-align:center;border:1px solid #e2e8f0}
+.heatmap-table td:first-child{font-weight:600;text-align:left;color:#475569;background:#f8fafc}
+.hm-empty{color:#cbd5e1}
+.deep-dive{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-top:20px}
+.deep-dive-title{font-size:13px;font-weight:600;color:#475569;margin-bottom:12px}
 .deep-dive-filters{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
-.stacked-chart-box{background:#161b27;border:1px solid #1e293b;border-radius:8px;padding:14px;margin-bottom:14px}
-.chart-note{font-size:10px;color:#475569;margin-top:4px}
-.area-chart-box{background:#161b27;border:1px solid #1e293b;border-radius:8px;padding:14px;margin-bottom:20px}
+.stacked-chart-box{background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:14px;margin-bottom:14px}
+.chart-note{font-size:10px;color:#94a3b8;margin-top:4px}
+.area-chart-box{background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:14px;margin-bottom:20px}
 </style>
 </head>
 <body>
@@ -87,7 +88,7 @@ canvas.area{max-height:300px}
     </div>
     <div class="filter-group">
       <label>Flow</label>
-      <div class="flow-picker" id="t1-flows"></div>
+      <select id="t1-flows"></select>
     </div>
     <div class="filter-group">
       <label>From</label>
@@ -115,7 +116,7 @@ canvas.area{max-height:300px}
   </div>
   <div class="heatmap-section">
     <div class="heatmap-controls">
-      <span style="font-size:13px;font-weight:600;color:#94a3b8">Heatmap — Last 12 Months · All Countries</span>
+      <span style="font-size:13px;font-weight:600;color:#475569">Heatmap — Last 12 Months · All Countries</span>
       <div class="filter-group"><select id="t1-hm-metric" onchange="renderHeatmap('t1')">
         <option value="rv">% Reviewed</option><option value="pv">% Positive</option><option value="bd">% Bad+Critical</option>
       </select></div>
@@ -145,7 +146,7 @@ canvas.area{max-height:300px}
     </div>
     <div class="filter-group">
       <label>Flow</label>
-      <div class="flow-picker" id="t2-flows"></div>
+      <select id="t2-flows"></select>
     </div>
     <div class="filter-group">
       <label>From</label>
@@ -177,7 +178,7 @@ canvas.area{max-height:300px}
   </div>
   <div class="heatmap-section">
     <div class="heatmap-controls">
-      <span style="font-size:13px;font-weight:600;color:#94a3b8">Heatmap — Last 12 Weeks · All Countries</span>
+      <span style="font-size:13px;font-weight:600;color:#475569">Heatmap — Last 12 Weeks · All Countries</span>
       <div class="filter-group"><select id="t2-hm-metric" onchange="renderHeatmap('t2')">
         <option value="pv">% Positive</option><option value="rv">% Reviewed</option><option value="bd">% Bad+Critical</option>
       </select></div>
@@ -371,7 +372,11 @@ const charts={};
 function dc(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
 
 Chart.defaults.color='#64748b';
-Chart.defaults.borderColor='#1e293b';
+Chart.defaults.borderColor='#e2e8f0';
+// Data-labels plugin: registered globally but OFF by default.
+// Individual charts (trend lines) opt in; bar/stacked/area charts stay clean.
+if(window.ChartDataLabels){Chart.register(ChartDataLabels);}
+Chart.defaults.plugins.datalabels={display:false};
 
 // Generic tooltip label with absolute count
 function tooltipLabel(c){
@@ -401,9 +406,18 @@ function mkLine(id,labels,datasets,opts={}){
     options:{
       responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
+      layout:{padding:{top:24}},
       plugins:{
         legend:{position:'top',labels:{boxWidth:12,font:{size:11}}},
-        tooltip:{callbacks:{label:tooltipLabel}}
+        tooltip:{callbacks:{label:tooltipLabel}},
+        datalabels:{
+          // Show % labels on the points. Auto-hide when many lines would overlap.
+          display:datasets.length<=2?'auto':false,
+          align:'top',anchor:'end',offset:4,clamp:true,
+          color:ctx=>ctx.dataset.borderColor||'#0f172a',
+          font:{size:13,weight:'bold'},
+          formatter:v=>v==null||isNaN(v)?'':(v*100).toFixed(1)+'%'
+        }
       },
       scales:{
         x:{ticks:{font:{size:10},maxRotation:45}},
@@ -589,48 +603,56 @@ function renderDeepDive(tab){
 // ================================================================
 // COUNTRY/FLOW PICKERS
 // ================================================================
+// Country picker — chips. Click behaviour:
+//  • from the default "all selected" state, a click SELECTS ONLY that country (solo)
+//  • further clicks add / remove individual countries (multi-select for comparison)
+//  • clicking the last remaining country restores "all"
 function initCountryPicker(pickerEl,state,onChange){
   pickerEl.innerHTML='';
+  const chips={};
+  function paint(){
+    for(const rg of REGIONS){
+      const chip=chips[rg],on=state.regions.includes(rg);
+      chip.className='country-chip '+(on?'selected':'unselected');
+      if(on){chip.style.background=REGION_COLORS[rg]+'33';chip.style.color=REGION_COLORS[rg];chip.style.borderColor=REGION_COLORS[rg]+'88';}
+      else{chip.style.background='';chip.style.color='';chip.style.borderColor='';}
+    }
+  }
   for(const rg of REGIONS){
     const chip=document.createElement('span');
-    chip.className='country-chip selected';
     chip.textContent=rg;
-    chip.style.background=REGION_COLORS[rg]+'33';
-    chip.style.color=REGION_COLORS[rg];
-    chip.style.borderColor=REGION_COLORS[rg]+'88';
+    chips[rg]=chip;
     chip.onclick=()=>{
-      const idx=state.regions.indexOf(rg);
-      if(idx>=0){if(state.regions.length>1)state.regions.splice(idx,1);}
-      else state.regions.push(rg);
-      chip.className='country-chip '+(state.regions.includes(rg)?'selected':'unselected');
-      if(state.regions.includes(rg)){chip.style.background=REGION_COLORS[rg]+'33';chip.style.color=REGION_COLORS[rg];}
-      else{chip.style.background='';chip.style.color='';}
+      const allOn=state.regions.length===REGIONS.length;
+      if(allOn){state.regions=[rg];}
+      else if(state.regions.includes(rg)){
+        state.regions=state.regions.length>1?state.regions.filter(x=>x!==rg):[...REGIONS];
+      } else {state.regions.push(rg);}
+      paint();
       onChange();
     };
     pickerEl.appendChild(chip);
   }
+  paint();
+  state._paintRegions=paint;
 }
 
-function initFlowPicker(pickerEl,state,onChange){
-  pickerEl.innerHTML='';
+// Flow picker — single-select dropdown ("All Flows" + each flow).
+function initFlowPicker(selEl,state,onChange){
+  selEl.innerHTML='';
+  const optAll=document.createElement('option');
+  optAll.value='__all__';optAll.textContent='All Flows';
+  selEl.appendChild(optAll);
   for(const fl of ALL_FLOWS){
-    const chip=document.createElement('span');
-    chip.className='country-chip selected';
-    chip.textContent=fl;
-    chip.style.background=FLOW_COLORS[fl]+'33';
-    chip.style.color=FLOW_COLORS[fl];
-    chip.style.borderColor=FLOW_COLORS[fl]+'88';
-    chip.onclick=()=>{
-      const idx=state.flows.indexOf(fl);
-      if(idx>=0){if(state.flows.length>1)state.flows.splice(idx,1);}
-      else state.flows.push(fl);
-      chip.className='country-chip '+(state.flows.includes(fl)?'selected':'unselected');
-      if(state.flows.includes(fl)){chip.style.background=FLOW_COLORS[fl]+'33';chip.style.color=FLOW_COLORS[fl];}
-      else{chip.style.background='';chip.style.color='';}
-      onChange();
-    };
-    pickerEl.appendChild(chip);
+    const o=document.createElement('option');
+    o.value=fl;o.textContent=fl;
+    selEl.appendChild(o);
   }
+  selEl.value='__all__';
+  selEl.onchange=()=>{
+    state.flows=selEl.value==='__all__'?[...ALL_FLOWS]:[selEl.value];
+    onChange();
+  };
 }
 
 function buildSelector(selId,keys,defaultKey,labelFn,onChange){
@@ -721,14 +743,8 @@ function renderTab1(){
 function resetTab1(){
   t1State.regions=[...REGIONS];
   t1State.flows=[...ALL_FLOWS];
-  document.querySelectorAll('#t1-countries .country-chip').forEach((chip,i)=>{
-    chip.className='country-chip selected';const rg=REGIONS[i];
-    chip.style.background=REGION_COLORS[rg]+'33';chip.style.color=REGION_COLORS[rg];
-  });
-  document.querySelectorAll('#t1-flows .country-chip').forEach((chip,i)=>{
-    const fl=ALL_FLOWS[i];chip.className='country-chip selected';
-    chip.style.background=FLOW_COLORS[fl]+'33';chip.style.color=FLOW_COLORS[fl];
-  });
+  t1State._paintRegions&&t1State._paintRegions();
+  const fsel=document.getElementById('t1-flows');if(fsel)fsel.value='__all__';
   const keys=[...new Set(MONTHLY.filter(r=>r.al>0||r.gr>0).map(r=>r._key))].sort();
   document.getElementById('t1-from').value=keys[0];
   document.getElementById('t1-to').value=keys[keys.length-1];
@@ -816,14 +832,8 @@ function resetTab2(){
   t2State.flows=[...ALL_FLOWS];
   t2State.elevenOnly=false;
   t2State.regions=[...REGIONS];
-  document.querySelectorAll('#t2-countries .country-chip').forEach((chip,i)=>{
-    chip.className='country-chip selected';const rg=REGIONS[i];
-    chip.style.background=REGION_COLORS[rg]+'33';chip.style.color=REGION_COLORS[rg];
-  });
-  document.querySelectorAll('#t2-flows .country-chip').forEach((chip,i)=>{
-    const fl=ALL_FLOWS[i];chip.className='country-chip selected';
-    chip.style.background=FLOW_COLORS[fl]+'33';chip.style.color=FLOW_COLORS[fl];
-  });
+  t2State._paintRegions&&t2State._paintRegions();
+  const fsel=document.getElementById('t2-flows');if(fsel)fsel.value='__all__';
   const keys=[...new Set(WEEKLY.filter(r=>r.al>0||r.gr>0).map(r=>r._key))].sort();
   document.getElementById('t2-from').value=keys[0];
   document.getElementById('t2-to').value=keys[keys.length-1];
@@ -866,23 +876,32 @@ function agg11LabsByKey(rows){
 
 function initOBCountryPicker(pickerEl,state,onChange){
   pickerEl.innerHTML='';
+  const chips={};
+  function paint(){
+    for(const rg of ELEVENLABS_COUNTRIES){
+      const chip=chips[rg],c=ELEVENLABS_COUNTRY_COLORS[rg],on=state.countries.includes(rg);
+      chip.className='country-chip '+(on?'selected':'unselected');
+      if(on){chip.style.background=c+'33';chip.style.color=c;chip.style.borderColor=c+'88';}
+      else{chip.style.background='';chip.style.color='';chip.style.borderColor='';}
+    }
+  }
   for(const rg of ELEVENLABS_COUNTRIES){
     const chip=document.createElement('span');
-    chip.className='country-chip selected';
     chip.textContent=rg;
-    const c=ELEVENLABS_COUNTRY_COLORS[rg];
-    chip.style.background=c+'33'; chip.style.color=c; chip.style.borderColor=c+'88';
+    chips[rg]=chip;
     chip.onclick=()=>{
-      const idx=state.countries.indexOf(rg);
-      if(idx>=0){if(state.countries.length>1)state.countries.splice(idx,1);}
-      else state.countries.push(rg);
-      chip.className='country-chip '+(state.countries.includes(rg)?'selected':'unselected');
-      if(state.countries.includes(rg)){chip.style.background=c+'33';chip.style.color=c;}
-      else{chip.style.background='';chip.style.color='';}
+      const allOn=state.countries.length===ELEVENLABS_COUNTRIES.length;
+      if(allOn){state.countries=[rg];}
+      else if(state.countries.includes(rg)){
+        state.countries=state.countries.length>1?state.countries.filter(x=>x!==rg):[...ELEVENLABS_COUNTRIES];
+      } else {state.countries.push(rg);}
+      paint();
       onChange();
     };
     pickerEl.appendChild(chip);
   }
+  paint();
+  state._paintCountries=paint;
 }
 
 function get11labsRows(gran,countries){
@@ -984,10 +1003,7 @@ function renderTab3(){
 
 function resetTab3(){
   t3State.countries=[...ELEVENLABS_COUNTRIES];
-  document.querySelectorAll('#t3-countries .country-chip').forEach((chip,i)=>{
-    const rg=ELEVENLABS_COUNTRIES[i];const c=ELEVENLABS_COUNTRY_COLORS[rg];
-    chip.className='country-chip selected';chip.style.background=c+'33';chip.style.color=c;
-  });
+  t3State._paintCountries&&t3State._paintCountries();
   document.getElementById('t3-range').value='daily';
   buildT3Selectors();
   renderTab3();
@@ -1078,10 +1094,7 @@ function renderTab4(){
 
 function resetTab4(){
   t4State.countries=[...ELEVENLABS_COUNTRIES];
-  document.querySelectorAll('#t4-countries .country-chip').forEach((chip,i)=>{
-    const rg=ELEVENLABS_COUNTRIES[i];const c=ELEVENLABS_COUNTRY_COLORS[rg];
-    chip.className='country-chip selected';chip.style.background=c+'33';chip.style.color=c;
-  });
+  t4State._paintCountries&&t4State._paintCountries();
   document.getElementById('t4-range').value='daily';
   buildT4Selectors();
   renderTab4();

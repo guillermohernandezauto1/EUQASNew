@@ -23,11 +23,14 @@ body{font-family:system-ui,sans-serif;font-size:13px;background:#ffffff;color:#1
 .filter-group label{font-size:11px;color:#64748b;font-weight:500;text-transform:uppercase;letter-spacing:.05em}
 .filter-group select,.filter-group input{background:#ffffff;border:1px solid #cbd5e1;color:#1e293b;padding:5px 8px;border-radius:4px;font-size:12px;min-width:90px}
 .filter-group select:focus,.filter-group input:focus{outline:none;border-color:#2563eb}
-.country-picker{display:flex;flex-wrap:wrap;gap:4px;max-width:300px}
+.country-picker{display:flex;flex-wrap:wrap;gap:8px;max-width:none}
 .flow-picker{display:flex;flex-wrap:wrap;gap:4px;max-width:600px}
-.country-chip{padding:3px 8px;border-radius:12px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .1s;user-select:none}
-.country-chip.selected{border-color:transparent}
-.country-chip.unselected{background:#f1f5f9!important;color:#94a3b8!important;border-color:#cbd5e1}
+.country-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:20px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid #cbd5e1;background:#ffffff;color:#1e293b;transition:all .12s;user-select:none;white-space:nowrap;line-height:1}
+.country-chip .flag{width:20px;height:15px;border-radius:2px;display:block;object-fit:cover;box-shadow:0 0 0 1px rgba(15,23,42,0.08)}
+.country-chip:hover{border-color:#94a3b8}
+.country-chip.selected{background:#1e293b;color:#ffffff;border-color:#1e293b}
+.country-chip.allavg{border-style:dashed;color:#475569}
+.country-chip.allavg.selected{color:#ffffff}
 .btn-reset{padding:5px 12px;background:#f1f5f9;border:1px solid #cbd5e1;color:#475569;border-radius:4px;cursor:pointer;font-size:12px;transition:all .1s}
 .btn-reset:hover{background:#e2e8f0;color:#1e293b}
 .toggle-11labs{padding:5px 12px;background:#f1f5f9;border:1px solid #cbd5e1;color:#475569;border-radius:4px;cursor:pointer;font-size:12px;transition:all .1s;display:none}
@@ -84,7 +87,7 @@ canvas.area{max-height:300px}
   <div class="filters">
     <div class="filter-group">
       <label>Country</label>
-      <select id="t1-countries"></select>
+      <div class="country-picker" id="t1-countries"></div>
     </div>
     <div class="filter-group">
       <label>Flow</label>
@@ -142,7 +145,7 @@ canvas.area{max-height:300px}
   <div class="filters">
     <div class="filter-group">
       <label>Country</label>
-      <select id="t2-countries"></select>
+      <div class="country-picker" id="t2-countries"></div>
     </div>
     <div class="filter-group">
       <label>Flow</label>
@@ -204,7 +207,7 @@ canvas.area{max-height:300px}
   <div class="filters">
     <div class="filter-group">
       <label>Country</label>
-      <select id="t3-countries"></select>
+      <div class="country-picker" id="t3-countries"></div>
     </div>
     <div class="filter-group">
       <label>Granularity</label>
@@ -245,7 +248,7 @@ canvas.area{max-height:300px}
   <div class="filters">
     <div class="filter-group">
       <label>Country</label>
-      <select id="t4-countries"></select>
+      <div class="country-picker" id="t4-countries"></div>
     </div>
     <div class="filter-group">
       <label>Granularity</label>
@@ -297,6 +300,8 @@ const REGION_COLORS = {
   DE:'#f59e0b', ES:'#f97316', FR:'#3b82f6', IT:'#22c55e',
   PT:'#16a34a', NL:'#fb923c', SE:'#93c5fd', AT:'#dc2626', BE:'#facc15'
 };
+// Flag icon (ISO-3166 alpha-2, lowercase) from flagcdn — renders consistently across OSes.
+function flagImg(code){return `<img class="flag" src="https://flagcdn.com/40x30/${code.toLowerCase()}.png" srcset="https://flagcdn.com/80x60/${code.toLowerCase()}.png 2x" width="20" height="15" alt="">`;}
 const TIER = {
   great:{label:'Great',color:'#166534'},
   good:{label:'Good',color:'#4ade80'},
@@ -603,23 +608,34 @@ function renderDeepDive(tab){
 // ================================================================
 // COUNTRY/FLOW PICKERS
 // ================================================================
-// Country picker — single-select dropdown ("All Countries" + each country).
-function initCountryPicker(selEl,state,onChange){
-  selEl.innerHTML='';
-  const optAll=document.createElement('option');
-  optAll.value='__all__';optAll.textContent='All Countries';
-  selEl.appendChild(optAll);
-  for(const rg of REGIONS){
-    const o=document.createElement('option');
-    o.value=rg;o.textContent=rg;
-    selEl.appendChild(o);
+// Country picker — flag pills. "EU AVG" (dashed) aggregates all countries into one
+// average line; clicking a country flag selects only that country (single-select).
+function initCountryPicker(pickerEl,state,onChange){
+  pickerEl.innerHTML='';
+  const chips={};
+  function paint(){
+    chips.__avg.className='country-chip allavg'+(state.euAvg?' selected':'');
+    for(const rg of REGIONS){
+      const on=!state.euAvg && state.regions.length===1 && state.regions[0]===rg;
+      chips[rg].className='country-chip'+(on?' selected':'');
+    }
   }
-  selEl.value='__all__';
-  selEl.onchange=()=>{
-    state.regions=selEl.value==='__all__'?[...REGIONS]:[selEl.value];
-    onChange();
-  };
-  state._paintRegions=()=>{selEl.value='__all__';};
+  const avg=document.createElement('span');
+  avg.className='country-chip allavg';
+  avg.textContent='EU AVG';
+  avg.onclick=()=>{state.euAvg=true;state.regions=[...REGIONS];paint();onChange();};
+  chips.__avg=avg;
+  pickerEl.appendChild(avg);
+  for(const rg of REGIONS){
+    const chip=document.createElement('span');
+    chip.className='country-chip';
+    chip.innerHTML=`${flagImg(rg)}${rg}`;
+    chip.onclick=()=>{state.euAvg=false;state.regions=[rg];paint();onChange();};
+    chips[rg]=chip;
+    pickerEl.appendChild(chip);
+  }
+  paint();
+  state._paintRegions=()=>{state.euAvg=true;state.regions=[...REGIONS];paint();};
 }
 
 // Flow picker — single-select dropdown ("All Flows" + each flow).
@@ -668,7 +684,7 @@ function buildWeekOptions(selId,defaultVal,onChange,srcData){
 // ================================================================
 // TAB 1 - MONTHLY
 // ================================================================
-const t1State={regions:[...REGIONS],flows:[...ALL_FLOWS]};
+const t1State={regions:[...REGIONS],flows:[...ALL_FLOWS],euAvg:true};
 
 function renderTab1(){
   const regions=t1State.regions;
@@ -699,14 +715,25 @@ function renderTab1(){
   // Line: % reviewed per region per month
   const allKeys=[...new Set(data.map(r=>r._key))].sort();
   const labels=allKeys.map(k=>mlabel(Math.floor(k/100),k%100));
-  const lineds=regions.map(rg=>{
-    const byMo=aggByKey(data.filter(r=>r.rg===rg),r=>r._key);
+  let lineds;
+  if(t1State.euAvg){
+    // Single aggregated EU-average line across all countries
+    const byMo=aggByKey(data,r=>r._key);
     const map=Object.fromEntries(byMo.map(p=>[+p._k,p]));
-    return{label:rg,data:allKeys.map(k=>map[k]?.rv??null),
+    lineds=[{label:'EU AVG',data:allKeys.map(k=>map[k]?.rv??null),
       _reviewed:allKeys.map(k=>map[k]?.rev??null),
       _total:allKeys.map(k=>map[k]?.all??null),
-      borderColor:REGION_COLORS[rg],backgroundColor:'transparent',borderWidth:2,pointRadius:3,spanGaps:false};
-  });
+      borderColor:'#1e293b',backgroundColor:'transparent',borderWidth:2,pointRadius:3,spanGaps:false}];
+  } else {
+    lineds=regions.map(rg=>{
+      const byMo=aggByKey(data.filter(r=>r.rg===rg),r=>r._key);
+      const map=Object.fromEntries(byMo.map(p=>[+p._k,p]));
+      return{label:rg,data:allKeys.map(k=>map[k]?.rv??null),
+        _reviewed:allKeys.map(k=>map[k]?.rev??null),
+        _total:allKeys.map(k=>map[k]?.all??null),
+        borderColor:REGION_COLORS[rg],backgroundColor:'transparent',borderWidth:2,pointRadius:3,spanGaps:false};
+    });
+  }
   mkLine('t1-line',labels,lineds);
 
   // Bar charts (latest period)
@@ -739,7 +766,7 @@ function resetTab1(){
 // ================================================================
 // TAB 2 - WEEKLY
 // ================================================================
-const t2State={regions:[...REGIONS],flows:[...ALL_FLOWS],elevenOnly:false};
+const t2State={regions:[...REGIONS],flows:[...ALL_FLOWS],elevenOnly:false,euAvg:true};
 
 function toggleElevenlabs(){
   t2State.elevenOnly=!t2State.elevenOnly;
@@ -789,13 +816,23 @@ function renderTab2(){
 
   const allKeys=[...new Set(data.map(r=>r._key))].sort();
   const labels=allKeys.map(k=>{const r=WEEKLY.find(x=>x._key===k);return r?r.wl:k;});
-  const lineds=regions.map(rg=>{
-    const byWk=aggByKey(data.filter(r=>r.rg===rg),r=>r._key);
+  let lineds;
+  if(t2State.euAvg&&!elevenOnly){
+    // Single aggregated EU-average line across all countries
+    const byWk=aggByKey(data,r=>r._key);
     const map=Object.fromEntries(byWk.map(p=>[+p._k,p]));
-    return{label:rg,data:allKeys.map(k=>map[k]?.pv??null),
+    lineds=[{label:'EU AVG',data:allKeys.map(k=>map[k]?.pv??null),
       _reviewed:allKeys.map(k=>map[k]?.rev??null),
-      borderColor:REGION_COLORS[rg],backgroundColor:'transparent',borderWidth:2,pointRadius:3,spanGaps:false};
-  });
+      borderColor:'#1e293b',backgroundColor:'transparent',borderWidth:2,pointRadius:3,spanGaps:false}];
+  } else {
+    lineds=regions.map(rg=>{
+      const byWk=aggByKey(data.filter(r=>r.rg===rg),r=>r._key);
+      const map=Object.fromEntries(byWk.map(p=>[+p._k,p]));
+      return{label:rg,data:allKeys.map(k=>map[k]?.pv??null),
+        _reviewed:allKeys.map(k=>map[k]?.rev??null),
+        borderColor:REGION_COLORS[rg],backgroundColor:'transparent',borderWidth:2,pointRadius:3,spanGaps:false};
+    });
+  }
   mkLine('t2-line',labels,lineds,{tightY:true});
 
   const barRgs=REGIONS.filter(rg=>regions.includes(rg));
@@ -859,22 +896,35 @@ function agg11LabsByKey(rows){
   });
 }
 
-function initOBCountryPicker(selEl,state,onChange){
-  selEl.innerHTML='';
-  const optAll=document.createElement('option');
-  optAll.value='__all__';optAll.textContent='All Countries';
-  selEl.appendChild(optAll);
-  for(const rg of ELEVENLABS_COUNTRIES){
-    const o=document.createElement('option');
-    o.value=rg;o.textContent=rg;
-    selEl.appendChild(o);
+// OB country picker — flag pills. "ALL" aggregates every 11Labs country into one
+// line; clicking a flag selects just that country (single-select).
+function initOBCountryPicker(pickerEl,state,onChange){
+  pickerEl.innerHTML='';
+  const chips={};
+  function paint(){
+    const all=state.countries.length===ELEVENLABS_COUNTRIES.length;
+    chips.__all.className='country-chip allavg'+(all?' selected':'');
+    for(const rg of ELEVENLABS_COUNTRIES){
+      const on=!all && state.countries.length===1 && state.countries[0]===rg;
+      chips[rg].className='country-chip'+(on?' selected':'');
+    }
   }
-  selEl.value='__all__';
-  selEl.onchange=()=>{
-    state.countries=selEl.value==='__all__'?[...ELEVENLABS_COUNTRIES]:[selEl.value];
-    onChange();
-  };
-  state._paintCountries=()=>{selEl.value='__all__';};
+  const allChip=document.createElement('span');
+  allChip.className='country-chip allavg';
+  allChip.textContent='ALL';
+  allChip.onclick=()=>{state.countries=[...ELEVENLABS_COUNTRIES];paint();onChange();};
+  chips.__all=allChip;
+  pickerEl.appendChild(allChip);
+  for(const rg of ELEVENLABS_COUNTRIES){
+    const chip=document.createElement('span');
+    chip.className='country-chip';
+    chip.innerHTML=`${flagImg(rg)}${rg}`;
+    chip.onclick=()=>{state.countries=[rg];paint();onChange();};
+    chips[rg]=chip;
+    pickerEl.appendChild(chip);
+  }
+  paint();
+  state._paintCountries=()=>{state.countries=[...ELEVENLABS_COUNTRIES];paint();};
 }
 
 function get11labsRows(gran,countries){

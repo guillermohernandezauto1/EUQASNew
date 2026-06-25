@@ -648,7 +648,9 @@ function renderDeepDive(tab){
   const state=tab==='t1'?t1State:t2State;
   const src=tab==='t1'?MONTHLY:WEEKLY;
   const rows=src.filter(r=>state.regions.includes(r.rg)&&state.flows.includes(r.fl));
-  const byPeriod=aggByKey(rows,r=>r._key);
+  // Only show periods where the selected flow actually had QA activity, so a flow
+  // that launched later (e.g. 11Labs from end of May) doesn't show volume before it existed.
+  const byPeriod=aggByKey(rows,r=>r._key).filter(p=>p.rev>0);
   const labels=tab==='t1'
     ?byPeriod.map(p=>mlabel(Math.floor(+p._k/100),+p._k%100))
     :byPeriod.map(p=>{const r=src.find(x=>x._key===+p._k);return r?r.wl:p._k;});
@@ -766,13 +768,18 @@ function renderTab1(){
   const flows=t1State.flows;
   const fromYM=+document.getElementById('t1-from').value;
   const toYM=+document.getElementById('t1-to').value;
-  const data=MONTHLY.filter(r=>regions.includes(r.rg)&&flows.includes(r.fl)&&r._key>=fromYM&&r._key<=toYM);
+  const dataAll=MONTHLY.filter(r=>regions.includes(r.rg)&&flows.includes(r.fl)&&r._key>=fromYM&&r._key<=toYM);
+  // Only count periods that actually had QA reviews, so a flow that launched later
+  // (e.g. 11Labs from end of May) doesn't contribute conversations before it existed.
+  const revByKey={};for(const r of dataAll)revByKey[r._key]=(revByKey[r._key]||0)+(r.gr||0);
+  const data=dataAll.filter(r=>revByKey[r._key]>0);
 
   const overall=weightedAgg(data);
 
-  // All four KPIs reflect the full selected period (From–To), for consistency
-  const fromLabel=mlabel(Math.floor(fromYM/100),fromYM%100);
-  const toLabel=mlabel(Math.floor(toYM/100),toYM%100);
+  // KPIs reflect the active selected period (From–To, trimmed to periods with QA activity)
+  const aKeys=[...new Set(data.map(r=>r._key))].sort();
+  const fromLabel=aKeys.length?mlabel(Math.floor(aKeys[0]/100),aKeys[0]%100):mlabel(Math.floor(fromYM/100),fromYM%100);
+  const toLabel=aKeys.length?mlabel(Math.floor(aKeys[aKeys.length-1]/100),aKeys[aKeys.length-1]%100):mlabel(Math.floor(toYM/100),toYM%100);
   const rangeLabel=fromLabel===toLabel?fromLabel:`${fromLabel} – ${toLabel}`;
   document.getElementById('t1-kpi-total').textContent=fmtNum(overall.all);
   document.getElementById('t1-kpi-total-sub').textContent=`All traffic · ${rangeLabel}`;
@@ -846,12 +853,15 @@ function renderTab2(){
   const toYW=+document.getElementById('t2-to').value;
   const elevenOnly=t2State.elevenOnly;
 
-  const data=WEEKLY.filter(r=>{
+  const dataAll=WEEKLY.filter(r=>{
     if(!regions.includes(r.rg))return false;
     if(elevenOnly&&r.fl!=='11Labs Outbound')return false;
     else if(!elevenOnly&&!flows.includes(r.fl))return false;
     return r._key>=fromYW&&r._key<=toYW;
   });
+  // Only count periods with QA activity (so a later-launching flow doesn't show pre-launch volume)
+  const revByKey={};for(const r of dataAll)revByKey[r._key]=(revByKey[r._key]||0)+(r.gr||0);
+  const data=dataAll.filter(r=>revByKey[r._key]>0);
 
   // Surface the empty-weekly-data condition explicitly
   const emptyEl=document.getElementById('t2-empty');

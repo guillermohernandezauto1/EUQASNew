@@ -462,7 +462,7 @@ function mkStackedBar(id,labels,datasets){
           // the others sit centred inside their segment.
           color:c=>c.dataset.label==='Critical'?'#dc2626':(lightSeg[c.dataset.label]?'#1e293b':'#ffffff'),
           anchor:'center',align:'center',clamp:false,clip:false,
-          font:{size:11,weight:'bold'},
+          font:{size:14,weight:'bold'},
           formatter:v=>v==null?'':(v*100).toFixed(1)+'%'
         }
       },

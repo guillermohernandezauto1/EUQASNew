@@ -525,16 +525,22 @@ function mkBarVol(id,labels,data,color='#3b82f6',reviewed=null){
   const ctx=document.getElementById(id)?.getContext('2d');
   if(!ctx)return;
   const datasets=[
-    {type:'bar',label:'Conversations',data,backgroundColor:color+'66',borderWidth:0,order:3,
-      datalabels:{display:'auto',anchor:'end',align:'end',offset:2,color:'#475569',font:{size:11,weight:'bold'},formatter:v=>v==null?'':fmtNum(v)}}
+    {label:'Conversations',data,backgroundColor:color+'66',borderWidth:0,yAxisID:'y'}
   ];
   if(reviewed){
-    // QA-reviewed conversations, shown as a second column next to the total
-    datasets.push({type:'bar',label:'Reviewed QAs',data:reviewed,backgroundColor:color,borderWidth:0,order:2,
-      datalabels:{display:'auto',anchor:'end',align:'end',offset:2,color:'#1e293b',font:{size:10,weight:'bold'},formatter:v=>v==null?'':fmtNum(v)}});
+    // QA-reviewed conversations, on their own (right) axis so they're clearly readable
+    datasets.push({label:'Reviewed QAs',data:reviewed,backgroundColor:'#0f766e',borderWidth:0,yAxisID:'y1'});
   }
-  datasets.push({type:'line',label:'Trend',data:linTrend(data),borderColor:'#1e293b',borderWidth:2,borderDash:[5,4],pointRadius:0,fill:false,tension:0,order:1,
-    datalabels:{display:false}});
+  datasets.forEach(d=>{d._color=d.backgroundColor;}); // remember true colours for highlight/restore
+  const scales={
+    x:{ticks:{font:{size:10},maxRotation:45}},
+    y:{beginAtZero:true,position:'left',ticks:{font:{size:10},callback:v=>fmtNum(v)},
+       title:{display:!!reviewed,text:'All conversations',font:{size:10},color:'#94a3b8'}}
+  };
+  if(reviewed){
+    scales.y1={beginAtZero:true,position:'right',grid:{drawOnChartArea:false},ticks:{font:{size:10},callback:v=>fmtNum(v)},
+       title:{display:true,text:'Reviewed QAs',font:{size:10},color:'#0f766e'}};
+  }
   charts[id]=new Chart(ctx,{
     type:'bar',
     data:{labels,datasets},
@@ -542,8 +548,26 @@ function mkBarVol(id,labels,data,color='#3b82f6',reviewed=null){
       responsive:true,maintainAspectRatio:false,
       layout:{padding:{top:18}},
       interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:!!reviewed,position:'top',labels:{boxWidth:12,font:{size:11},filter:i=>i.text!=='Trend'}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtNum(c.raw)}`}}},
-      scales:{x:{ticks:{font:{size:10},maxRotation:45}},y:{beginAtZero:true,ticks:{font:{size:10}}}}
+      plugins:{
+        legend:{display:!!reviewed,position:'top',labels:{boxWidth:12,font:{size:11}},
+          // Click a series to highlight it: grey out the other, keep this one coloured
+          onClick:reviewed?(e,item,legend)=>{
+            const ch=legend.chart,i=item.datasetIndex,dss=ch.data.datasets;
+            if(ch._soloIdx===i){dss.forEach(d=>{d.backgroundColor=d._color;});ch._soloIdx=null;}
+            else{dss.forEach((d,ii)=>{d.backgroundColor=ii===i?d._color:'#cbd5e1';});ch._soloIdx=i;}
+            ch.update();
+          }:undefined
+        },
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtNum(c.raw)}`}},
+        datalabels:{
+          // show both by default (auto-hide overlaps); when a series is highlighted, show only it
+          display:c=>{const s=c.chart._soloIdx;return s==null?'auto':(c.datasetIndex===s?true:false);},
+          anchor:'end',align:'end',offset:2,font:{size:10,weight:'bold'},
+          color:c=>c.dataset.label==='Reviewed QAs'?'#0f766e':'#475569',
+          formatter:v=>v==null?'':fmtNum(v)
+        }
+      },
+      scales
     }
   });
 }

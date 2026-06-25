@@ -18,7 +18,7 @@ body{font-family:system-ui,sans-serif;font-size:13px;background:#ffffff;color:#1
 .tab-btn.active{color:#2563eb;border-bottom-color:#2563eb}
 .tab-content{display:none;padding:20px 24px 40px}
 .tab-content.active{display:block}
-.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding:14px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:18px}
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding:14px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:18px;position:sticky;top:0;z-index:30;box-shadow:0 2px 8px rgba(15,23,42,0.06)}
 .filter-group{display:flex;flex-direction:column;gap:4px}
 .filter-group label{font-size:11px;color:#64748b;font-weight:500;text-transform:uppercase;letter-spacing:.05em}
 .filter-group select,.filter-group input{background:#ffffff;border:1px solid #cbd5e1;color:#1e293b;padding:5px 8px;border-radius:4px;font-size:12px;min-width:90px}
@@ -85,7 +85,6 @@ canvas.area{max-height:300px}
 <div class="tabs">
   <button class="tab-btn active" onclick="showTab('t1')">Quality Trends</button>
   <button class="tab-btn" onclick="showTab('t3')">Outbound Overbooking</button>
-  <button class="tab-btn" onclick="showTab('t4')">Outbound Overbooking QAs</button>
 </div>
 
 <!-- ===== TAB 1: MONTHLY ===== -->
@@ -125,7 +124,7 @@ canvas.area{max-height:300px}
     <div class="kpi"><div class="kpi-label">Avg Positive Quality %</div><div class="kpi-value" id="t1-kpi-pv">—</div><div class="kpi-sub" id="t1-kpi-pv-sub">Vol-weighted · Great + Good + OK</div></div>
     <div class="kpi"><div class="kpi-label">Avg Review Coverage</div><div class="kpi-value" id="t1-kpi-rv">—</div><div class="kpi-sub">Vol-weighted · reviewed / all conversations</div></div>
   </div>
-  <div class="chart-box-full"><div class="chart-title">% Reviewed Over Time — All Selected Countries</div><canvas id="t1-line" class="tall"></canvas></div>
+  <div class="chart-box-full"><div class="chart-title">% Reviewed Over Time</div><canvas id="t1-line" class="tall"></canvas></div>
   <div class="heatmap-section">
     <div class="heatmap-controls">
       <span style="font-size:13px;font-weight:600;color:#475569" id="t1-heatmap-title">Heatmap — Last 12 Months · All Countries</span>
@@ -136,11 +135,7 @@ canvas.area{max-height:300px}
     <div id="t1-heatmap"></div>
   </div>
   <div class="deep-dive">
-    <div class="deep-dive-title">Country Deep Dive</div>
-    <div class="deep-dive-filters">
-      <div class="filter-group"><label>Country</label><select id="t1-dd-country" onchange="renderDeepDive('t1')"><option>DE</option><option>ES</option><option>FR</option><option>IT</option><option>PT</option><option>NL</option><option>SE</option><option>AT</option><option>BE</option></select></div>
-      <div class="filter-group"><label>Channel</label><select id="t1-dd-channel" onchange="renderDeepDive('t1')"><option value="all">All</option><option value="inbound">Inbound</option><option value="outbound">Outbound</option><option value="chatbot">Chatbot</option></select></div>
-    </div>
+    <div class="deep-dive-title">Deep Dive — <span id="t1-dd-scope">All countries</span> <span style="font-weight:400;color:#94a3b8">· follows the filters above</span></div>
     <div class="stacked-chart-box"><div class="chart-title">Quality Distribution Over Time</div><canvas id="t1-dd-stacked" class="tall"></canvas><div class="chart-note">100% = reviewed conversations only</div></div>
     <div class="chart-grid-2">
       <div class="chart-box"><div class="chart-title">% Reviewed Over Time</div><canvas id="t1-dd-rv"></canvas></div>
@@ -187,10 +182,10 @@ canvas.area{max-height:300px}
     <div class="kpi"><div class="kpi-label">Avg Positive Quality %</div><div class="kpi-value" id="t2-kpi-pv">—</div><div class="kpi-sub">Vol-weighted · Great + Good + OK</div></div>
     <div class="kpi"><div class="kpi-label">Avg Review Coverage</div><div class="kpi-value" id="t2-kpi-rv">—</div><div class="kpi-sub">Vol-weighted · reviewed / all conversations</div></div>
   </div>
-  <div class="chart-box-full"><div class="chart-title">% Reviewed Over Time — All Selected Countries</div><canvas id="t2-line" class="tall"></canvas></div>
+  <div class="chart-box-full"><div class="chart-title">% Reviewed Over Time</div><canvas id="t2-line" class="tall"></canvas></div>
   <div class="heatmap-section">
     <div class="heatmap-controls">
-      <span style="font-size:13px;font-weight:600;color:#475569">Heatmap — Last 12 Weeks · All Countries</span>
+      <span style="font-size:13px;font-weight:600;color:#475569" id="t2-heatmap-title">Heatmap — Last 12 Weeks · All Countries</span>
       <div class="filter-group"><select id="t2-hm-metric" onchange="renderHeatmap('t2')">
         <option value="pv">% Positive</option><option value="rv">% Reviewed</option><option value="bd">% Bad+Critical</option>
       </select></div>
@@ -198,11 +193,7 @@ canvas.area{max-height:300px}
     <div id="t2-heatmap"></div>
   </div>
   <div class="deep-dive">
-    <div class="deep-dive-title">Country Deep Dive</div>
-    <div class="deep-dive-filters">
-      <div class="filter-group"><label>Country</label><select id="t2-dd-country" onchange="renderDeepDive('t2')"><option>DE</option><option>ES</option><option>FR</option><option>IT</option><option>PT</option><option>NL</option><option>SE</option><option>AT</option><option>BE</option></select></div>
-      <div class="filter-group"><label>Channel</label><select id="t2-dd-channel" onchange="renderDeepDive('t2')"><option value="all">All</option><option value="inbound">Inbound</option><option value="outbound">Outbound</option><option value="chatbot">Chatbot</option></select></div>
-    </div>
+    <div class="deep-dive-title">Deep Dive — <span id="t2-dd-scope">All countries</span> <span style="font-weight:400;color:#94a3b8">· follows the filters above</span></div>
     <div class="stacked-chart-box"><div class="chart-title">Quality Distribution Over Time</div><canvas id="t2-dd-stacked" class="tall"></canvas><div class="chart-note">100% = reviewed conversations only</div></div>
     <div class="chart-grid-2">
       <div class="chart-box"><div class="chart-title">% Reviewed Over Time</div><canvas id="t2-dd-rv"></canvas></div>
@@ -252,46 +243,6 @@ canvas.area{max-height:300px}
   </div>
 </div>
 
-<!-- ===== TAB 4: OUTBOUND OVERBOOKING QAs ===== -->
-<div id="t4" class="tab-content">
-  <div class="filters">
-    <div class="filter-group">
-      <label>Country</label>
-      <div class="country-picker" id="t4-countries"></div>
-    </div>
-    <div class="filter-group">
-      <label>Granularity</label>
-      <select id="t4-range" onchange="onT4GranChange()">
-        <option value="daily" selected>Daily</option>
-        <option value="weekly">Weekly</option>
-        <option value="monthly">Monthly</option>
-      </select>
-    </div>
-    <div class="filter-group">
-      <label>From</label>
-      <select id="t4-from" onchange="renderTab4()"></select>
-    </div>
-    <div class="filter-group">
-      <label>To</label>
-      <select id="t4-to" onchange="renderTab4()"></select>
-    </div>
-    <div class="filter-group">
-      <label>&nbsp;</label>
-      <button class="btn-reset" onclick="resetTab4()">Reset</button>
-    </div>
-  </div>
-  <div class="kpi-row">
-    <div class="kpi"><div class="kpi-label">Total QAs Reviewed</div><div class="kpi-value blue" id="t4-kpi-total">—</div><div class="kpi-sub" id="t4-kpi-total-sub"></div></div>
-    <div class="kpi"><div class="kpi-label">Avg Positive Quality %</div><div class="kpi-value" id="t4-kpi-pv">—</div><div class="kpi-sub">Weighted by reviews</div></div>
-    <div class="kpi"><div class="kpi-label">Bad + Critical % (Latest)</div><div class="kpi-value" id="t4-kpi-bd">—</div><div class="kpi-sub">Most recent period only</div></div>
-  </div>
-  <div class="chart-box-full"><div class="chart-title">Positive Quality % Over Time — DE ElevenLabs</div><canvas id="t4-line" class="tall"></canvas></div>
-  <div class="chart-grid-2">
-    <div class="chart-box"><div class="chart-title">Quality Distribution — Latest Period</div><canvas id="t4-bar-tier"></canvas></div>
-    <div class="chart-box"><div class="chart-title">Daily/Period Volume</div><canvas id="t4-bar-vol"></canvas></div>
-  </div>
-</div>
-
 <script>
 // ================================================================
 // DATA
@@ -328,6 +279,16 @@ const FLOW_COLORS = {
   'RBA Inbound':'#3b82f6','Booking Inbound':'#06b6d4',
   'RBA Outbound':'#f97316','AMP Outbound':'#a855f7','AOC Outbound':'#ec4899',
   '11Labs Outbound':'#22c55e','Chatbot':'#eab308'
+};
+// Display labels for flows (underlying data keys are unchanged)
+const FLOW_LABELS = {
+  'RBA Inbound':'Inbound - Parloa RBA',
+  'Booking Inbound':'Inbound Booking Flow - Parloa RBA',
+  'RBA Outbound':'Out Overbooking - Parloa RBA',
+  'AMP Outbound':'Out Overbooking - AMP',
+  'AOC Outbound':'Booking Confirmation - AMP',
+  '11Labs Outbound':'Out Overbooking - 11Labs',
+  'Chatbot':'Website Chatbot'
 };
 const OUTCOME_META = [
   {key:'o_ab',label:'Abandoned after initial message',color:'#ef4444'},
@@ -516,16 +477,35 @@ function mkStackedArea(id,labels,datasets){
   });
 }
 
+// Linear-regression trend values across an array (nulls ignored)
+function linTrend(vals){
+  const pts=vals.map((v,i)=>[i,v]).filter(p=>p[1]!=null&&!isNaN(p[1]));
+  const n=pts.length;if(n<2)return vals.map(()=>null);
+  let sx=0,sy=0,sxy=0,sxx=0;
+  for(const [x,y] of pts){sx+=x;sy+=y;sxy+=x*y;sxx+=x*x;}
+  const d=n*sxx-sx*sx;if(!d)return vals.map(()=>null);
+  const m=(n*sxy-sx*sy)/d,b=(sy-m*sx)/n;
+  return vals.map((v,i)=>m*i+b);
+}
+
 function mkBarVol(id,labels,data,color='#3b82f6'){
   dc(id);
   const ctx=document.getElementById(id)?.getContext('2d');
   if(!ctx)return;
   charts[id]=new Chart(ctx,{
-    type:'bar',data:{labels,datasets:[{label:'Reviewed',data,backgroundColor:color+'aa',borderWidth:0}]},
+    type:'bar',
+    data:{labels,datasets:[
+      {type:'bar',label:'Conversations',data,backgroundColor:color+'aa',borderWidth:0,order:2,
+        datalabels:{display:'auto',anchor:'end',align:'end',offset:2,color:'#475569',font:{size:11,weight:'bold'},formatter:v=>v==null?'':fmtNum(v)}},
+      {type:'line',label:'Trend',data:linTrend(data),borderColor:'#1e293b',borderWidth:2,borderDash:[5,4],pointRadius:0,fill:false,tension:0,order:1,
+        datalabels:{display:false}}
+    ]},
     options:{
       responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmtNum(c.raw)} conversations`}}},
-      scales:{x:{ticks:{font:{size:10},maxRotation:45}},y:{ticks:{font:{size:10}}}}
+      layout:{padding:{top:18}},
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtNum(c.raw)}`}}},
+      scales:{x:{ticks:{font:{size:10},maxRotation:45}},y:{beginAtZero:true,ticks:{font:{size:10}}}}
     }
   });
 }
@@ -534,31 +514,35 @@ function mkBarVol(id,labels,data,color='#3b82f6'){
 // HEATMAP
 // ================================================================
 function renderHeatmap(tab){
+  const state=tab==='t1'?t1State:t2State;
   const metric=document.getElementById(`${tab}-hm-metric`).value;
-  const flows=tab==='t1'?t1State.flows:t2State.flows;
+  const flows=state.flows;
   const src=tab==='t1'?MONTHLY:WEEKLY;
+  // Respect the top country filter: show only the selected countries (all when EU AVG).
+  // Colour scale is normalised within the shown rows, so a single country's trend reads clearly.
+  const rgs=state.euAvg?REGIONS:state.regions;
   const allKeys=[...new Set(src.map(r=>r._key))].sort().slice(-12);
   const allLabels=tab==='t1'
     ?allKeys.map(k=>mlabel(Math.floor(k/100),k%100))
     :allKeys.map(k=>{const r=src.find(x=>x._key===k);return r?r.wl:k;});
   const data=src.filter(r=>allKeys.includes(r._key)&&flows.includes(r.fl));
   const grid={};
-  for(const rg of REGIONS){
+  for(const rg of rgs){
     grid[rg]={};
     for(const k of allKeys){
       grid[rg][k]=weightedAgg(data.filter(r=>r.rg===rg&&r._key===k));
     }
   }
   const vals=[];
-  for(const rg of REGIONS)for(const k of allKeys){
+  for(const rg of rgs)for(const k of allKeys){
     const v=metric==='rv'?grid[rg][k].rv:metric==='pv'?grid[rg][k].pv:grid[rg][k].bd;
     if(v!=null)vals.push(v);
   }
-  const mn=Math.min(...vals),mx=Math.max(...vals);
+  const mn=vals.length?Math.min(...vals):0,mx=vals.length?Math.max(...vals):1;
   let html='<table class="heatmap-table"><thead><tr><th>Country</th>';
   for(const lbl of allLabels)html+=`<th>${lbl}</th>`;
   html+='</tr></thead><tbody>';
-  for(const rg of REGIONS){
+  for(const rg of rgs){
     html+=`<tr><td>${rg}</td>`;
     for(const k of allKeys){
       const v=metric==='rv'?grid[rg][k].rv:metric==='pv'?grid[rg][k].pv:grid[rg][k].bd;
@@ -573,21 +557,28 @@ function renderHeatmap(tab){
   }
   html+='</tbody></table>';
   document.getElementById(`${tab}-heatmap`).innerHTML=html;
+  const titleEl=document.getElementById(`${tab}-heatmap-title`);
+  if(titleEl){
+    const scope=state.euAvg?'All Countries':(rgs.length===1?rgs[0]:`${rgs.length} countries`);
+    titleEl.textContent=`Heatmap — Last 12 ${tab==='t1'?'Months':'Weeks'} · ${scope}`;
+  }
 }
 
 // ================================================================
 // DEEP DIVE (shared Tab1/Tab2)
 // ================================================================
 function renderDeepDive(tab){
-  const country=document.getElementById(`${tab}-dd-country`).value;
-  const channel=document.getElementById(`${tab}-dd-channel`).value;
+  // Driven by the top filters (country + flow), not its own selectors
+  const state=tab==='t1'?t1State:t2State;
   const src=tab==='t1'?MONTHLY:WEEKLY;
-  const flows=FLOWS_BY_CHANNEL[channel];
-  const rows=src.filter(r=>r.rg===country&&(!flows||flows.includes(r.fl)));
+  const rows=src.filter(r=>state.regions.includes(r.rg)&&state.flows.includes(r.fl));
   const byPeriod=aggByKey(rows,r=>r._key);
   const labels=tab==='t1'
     ?byPeriod.map(p=>mlabel(Math.floor(+p._k/100),+p._k%100))
     :byPeriod.map(p=>{const r=src.find(x=>x._key===+p._k);return r?r.wl:p._k;});
+
+  const scopeEl=document.getElementById(`${tab}-dd-scope`);
+  if(scopeEl)scopeEl.textContent=state.euAvg?'All countries':(state.regions.length===1?state.regions[0]:`${state.regions.length} countries`);
 
   const tierFields=[
     {key:'qgr',label:'Great',color:TIER.great.color},
@@ -611,7 +602,8 @@ function renderDeepDive(tab){
     _total:byPeriod.map(p=>p.all),
     borderColor:'#38bdf8',backgroundColor:'#38bdf822',fill:true,borderWidth:2,pointRadius:3
   }]);
-  mkBarVol(`${tab}-dd-vol`,labels,byPeriod.map(p=>p.all),REGION_COLORS[country]);
+  const volColor=(!state.euAvg&&state.regions.length===1)?REGION_COLORS[state.regions[0]]:'#3b82f6';
+  mkBarVol(`${tab}-dd-vol`,labels,byPeriod.map(p=>p.all),volColor);
 }
 
 // ================================================================
@@ -655,7 +647,7 @@ function initFlowPicker(selEl,state,onChange){
   selEl.appendChild(optAll);
   for(const fl of ALL_FLOWS){
     const o=document.createElement('option');
-    o.value=fl;o.textContent=fl;
+    o.value=fl;o.textContent=FLOW_LABELS[fl]||fl;
     selEl.appendChild(o);
   }
   selEl.value='__all__';
@@ -718,7 +710,7 @@ function renderTab1(){
   document.getElementById('t1-kpi-pv-sub').textContent=`Vol-weighted · ${fmtNum(overall.rev)} reviews`;
   const rvEl=document.getElementById('t1-kpi-rv');
   rvEl.textContent=fmtPct(overall.rv);
-  rvEl.className='kpi-value '+pctColor(overall.rv,0.1,0.03);
+  rvEl.className='kpi-value';
 
   // Line: % reviewed per region per month
   const allKeys=[...new Set(data.map(r=>r._key))].sort();
@@ -806,7 +798,7 @@ function renderTab2(){
   pvEl.className='kpi-value '+pctColor(overall.pv);
   const rvEl=document.getElementById('t2-kpi-rv');
   rvEl.textContent=fmtPct(overall.rv);
-  rvEl.className='kpi-value '+pctColor(overall.rv,0.1,0.03);
+  rvEl.className='kpi-value';
 
   const allKeys=[...new Set(data.map(r=>r._key))].sort();
   const labels=allKeys.map(k=>{const r=WEEKLY.find(x=>x._key===k);return r?r.wl:k;});
@@ -853,7 +845,6 @@ function resetTab2(){
 const ELEVENLABS_COUNTRIES = ["DE", "ES", "FR", "IT"];
 const ELEVENLABS_COUNTRY_COLORS = {DE:'#f59e0b',ES:'#f97316',FR:'#3b82f6',IT:'#22c55e'};
 const t3State = {countries:[...ELEVENLABS_COUNTRIES]};
-const t4State = {countries:[...ELEVENLABS_COUNTRIES]};
 
 // Aggregate multi-country rows by period key (date/week/month)
 // so charts always have one point per period, not one per country.
@@ -1016,97 +1007,6 @@ function resetTab3(){
 }
 
 // ================================================================
-// TAB 4 — OUTBOUND OVERBOOKING QAs
-// ================================================================
-function get11labsQARows(gran,countries){
-  const rgs=countries||ELEVENLABS_COUNTRIES;
-  if(gran==='daily') return DAILY.filter(r=>rgs.includes(r.rg)&&r.gr>0);
-  if(gran==='weekly') return WEEKLY.filter(r=>r.fl==='11Labs Outbound'&&rgs.includes(r.rg)&&r.yr>=2026&&r.gr>0);
-  return MONTHLY.filter(r=>r.fl==='11Labs Outbound'&&rgs.includes(r.rg)&&r.yr>=2026&&r.gr>0);
-}
-
-function buildT4Selectors(){
-  const gran=document.getElementById('t4-range').value;
-  const rows=[...get11labsQARows(gran,t4State.countries)].sort((a,b)=>a._key-b._key);
-  const keys=[...new Set(rows.map(r=>r._key))];
-  const labelFn=k=>{
-    if(gran==='daily'){const r=DAILY.find(x=>x._key===k);return r?r.lbl:k;}
-    if(gran==='weekly'){const r=WEEKLY.find(x=>x._key===k);return r?r.wl:k;}
-    return mlabel(Math.floor(k/100),k%100);
-  };
-  buildSelector('t4-from',keys,keys[0],labelFn,renderTab4);
-  buildSelector('t4-to',keys,keys[keys.length-1],labelFn,renderTab4);
-}
-
-function onT4GranChange(){buildT4Selectors();renderTab4();}
-
-function renderTab4(){
-  const gran=document.getElementById('t4-range').value;
-  const from=+document.getElementById('t4-from').value;
-  const to=+document.getElementById('t4-to').value;
-  // aggregate across selected countries so each period has one data point
-  let rows=agg11LabsByKey(
-    get11labsQARows(gran,t4State.countries).filter(r=>r._key>=from&&r._key<=to)
-  );
-
-  const labelFn=r=>{
-    if(gran==='daily')return r.lbl;
-    if(gran==='weekly')return r.wl;
-    return mlabel(r.yr,r.mo);
-  };
-  const labels=rows.map(labelFn);
-
-  const totalRev=rows.reduce((s,r)=>s+r.gr,0);
-  document.getElementById('t4-kpi-total').textContent=fmtNum(totalRev);
-  document.getElementById('t4-kpi-total-sub').textContent=
-    rows.length?`${labels[0]} – ${labels[labels.length-1]} · DE ElevenLabs`:'';
-
-  let pvS=0,pvW=0;
-  for(const r of rows)if(r.pv!=null&&r.gr>0){pvS+=r.pv*r.gr;pvW+=r.gr;}
-  const avgPv=pvW>0?pvS/pvW:null;
-  const pvEl=document.getElementById('t4-kpi-pv');
-  pvEl.textContent=fmtPct(avgPv);
-  pvEl.className='kpi-value '+pctColor(avgPv,0.90,0.80);
-
-  const latest=rows[rows.length-1];
-  const latestBd=latest?((latest.bd||0)+(latest.cr||0)):null;
-  const bdEl=document.getElementById('t4-kpi-bd');
-  bdEl.textContent=fmtPct(latestBd);
-  bdEl.className='kpi-value '+negPctColor(latestBd,0.05,0.10);
-
-  // Quality % trend line
-  mkLine('t4-line',labels,[{
-    label:'Positive Quality %',
-    data:rows.map(r=>r.pv),
-    _reviewed:rows.map(r=>r.gr),
-    borderColor:'#22c55e',backgroundColor:'#22c55e22',
-    fill:true,borderWidth:2,pointRadius:4
-  }],{tightY:true});
-
-  // Quality tier distribution — latest period stacked bar
-  if(latest&&latest.gr>0){
-    mkBar('t4-bar-tier',
-      ['Great','Good','OK','Bad','Critical'],
-      [{label:labelFn(latest),
-        data:[latest.qgr/latest.gr,latest.qgo/latest.gr,latest.qok/latest.gr,latest.qbd/latest.gr,latest.qcr/latest.gr],
-        _counts:[latest.qgr,latest.qgo,latest.qok,latest.qbd,latest.qcr],
-        backgroundColor:[TIER.great.color,TIER.good.color,TIER.ok.color,TIER.bad.color,TIER.critical.color]}]
-    );
-  }
-
-  // Volume bar
-  mkBarVol('t4-bar-vol',labels,rows.map(r=>r.gr),'#38bdf8');
-}
-
-function resetTab4(){
-  t4State.countries=[...ELEVENLABS_COUNTRIES];
-  t4State._paintCountries&&t4State._paintCountries();
-  document.getElementById('t4-range').value='daily';
-  buildT4Selectors();
-  renderTab4();
-}
-
-// ================================================================
 // TAB SWITCHING
 // ================================================================
 // Granularity for the combined Monthly/Weekly "Quality Trends" tab
@@ -1131,10 +1031,9 @@ function showTab(id){
     return;
   }
   document.getElementById(id).classList.add('active');
-  const idx={t3:1,t4:2}[id];
+  const idx={t3:1}[id];
   document.querySelectorAll('.tab-btn')[idx].classList.add('active');
   if(id==='t3')renderTab3();
-  if(id==='t4')renderTab4();
 }
 
 // ================================================================
@@ -1154,13 +1053,10 @@ function showTab(id){
   buildWeekOptions('t2-to',wk[wk.length-1],renderTab2);
 
   initOBCountryPicker(document.getElementById('t3-countries'),t3State,()=>{buildT3Selectors();renderTab3();});
-  initOBCountryPicker(document.getElementById('t4-countries'),t4State,()=>{buildT4Selectors();renderTab4();});
   buildT3Selectors();
-  buildT4Selectors();
 
   setGran('monthly');
   renderTab3();
-  renderTab4();
 })();
 </script>
 </body>

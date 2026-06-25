@@ -421,17 +421,56 @@ function mkStackedBar(id,labels,datasets){
   dc(id);
   const ctx=document.getElementById(id)?.getContext('2d');
   if(!ctx)return;
+  const lightSeg={Good:1,OK:1}; // these segment colours need dark text
   charts[id]=new Chart(ctx,{
     type:'bar',data:{labels,datasets},
     options:{
       responsive:true,maintainAspectRatio:false,
+      layout:{padding:{top:26}},
       plugins:{
-        legend:{position:'top',labels:{boxWidth:12,font:{size:11}}},
-        tooltip:{mode:'index',intersect:false,callbacks:{label:tooltipLabel}}
+        legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}},
+          // Click a tier to solo it (highlight just that colour); click again to restore.
+          // When soloed, auto-scale the axis so a small tier (e.g. Critical) is readable.
+          onClick:(e,item,legend)=>{
+            const ch=legend.chart,i=item.datasetIndex;
+            const all=ch.data.datasets.map((_,ii)=>ch.getDatasetMeta(ii));
+            const anyHidden=all.some((m,ii)=>ii!==i&&!m.hidden);
+            if(anyHidden){
+              all.forEach((m,ii)=>{m.hidden=ii!==i;});
+              const vals=ch.data.datasets[i].data.filter(v=>v!=null);
+              const mx=vals.length?Math.max(...vals):1;
+              ch.options.scales.y.max=Math.min(1,Math.max(0.05,mx*1.25));
+            } else {
+              all.forEach(m=>{m.hidden=false;});
+              ch.options.scales.y.max=1;
+            }
+            ch.update();
+          }
+        },
+        tooltip:{mode:'index',intersect:false,callbacks:{label:tooltipLabel}},
+        datalabels:{
+          // Label the 3 largest segments per bar, and always label Critical
+          display:c=>{
+            const v=c.dataset.data[c.dataIndex];
+            if(v==null||v<=0.0009)return false;
+            if(c.dataset.label==='Critical')return true;
+            const vals=c.chart.data.datasets
+              .filter((d,ii)=>!c.chart.getDatasetMeta(ii).hidden)
+              .map(d=>d.data[c.dataIndex]||0);
+            const thr=[...vals].sort((a,b)=>b-a)[2]??0;
+            return v>=thr;
+          },
+          // Critical is a tiny top sliver — show it as a red callout above the bar;
+          // the others sit centred inside their segment.
+          color:c=>c.dataset.label==='Critical'?'#dc2626':(lightSeg[c.dataset.label]?'#1e293b':'#ffffff'),
+          anchor:'center',align:'center',clamp:false,clip:false,
+          font:{size:11,weight:'bold'},
+          formatter:v=>v==null?'':(v*100).toFixed(1)+'%'
+        }
       },
       scales:{
         x:{stacked:true,ticks:{font:{size:10},maxRotation:45}},
-        y:{stacked:true,min:0,max:1,ticks:{callback:v=>(v*100).toFixed(1)+'%',font:{size:10}}}
+        y:{stacked:true,min:0,max:1,ticks:{callback:v=>(v*100).toFixed(0)+'%',font:{size:10}}}
       }
     }
   });
@@ -582,12 +621,17 @@ function renderDeepDive(tab){
     {key:'qbd',label:'Bad',color:TIER.bad.color},
     {key:'qcr',label:'Critical',color:TIER.critical.color},
   ];
-  const ds=tierFields.map(tf=>({
-    label:tf.label,
-    data:byPeriod.map(p=>p.rev>0?p[tf.key]/p.rev:null),
-    _counts:byPeriod.map(p=>p[tf.key]),
-    backgroundColor:tf.color
-  }));
+  const ds=tierFields.map(tf=>{
+    const d={
+      label:tf.label,
+      data:byPeriod.map(p=>p.rev>0?p[tf.key]/p.rev:null),
+      _counts:byPeriod.map(p=>p[tf.key]),
+      backgroundColor:tf.color
+    };
+    // Critical is a thin top sliver — float its always-on label above the bar
+    if(tf.label==='Critical')d.datalabels={anchor:'end',align:'end',offset:1};
+    return d;
+  });
   mkStackedBar(`${tab}-dd-stacked`,labels,ds);
 
   const volColor=(!state.euAvg&&state.regions.length===1)?REGION_COLORS[state.regions[0]]:'#3b82f6';

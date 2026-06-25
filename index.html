@@ -544,13 +544,11 @@ function mkBarVol(id,labels,data,color='#3b82f6',reviewed=null){
       layout:{padding:{top:18}},
       interaction:{mode:'index',intersect:false},
       plugins:{
-        legend:{display:!!reviewed,position:'top',labels:{boxWidth:12,font:{size:11},filter:l=>l.text!=='Trend'},
-          // Click a series to highlight it: grey out the other, zoom the axis to fit the
-          // highlighted series, and overlay a trend line for that series. Click to restore.
+        legend:{display:!!reviewed,position:'top',labels:{boxWidth:12,font:{size:11}},
+          // Click a series to highlight it: grey out the other and zoom the axis to fit
+          // the highlighted series. Click again to restore.
           onClick:reviewed?(e,item,legend)=>{
             const ch=legend.chart,i=item.datasetIndex,dss=ch.data.datasets;
-            const ti=dss.findIndex(d=>d._isTrend);
-            if(ti>=0)dss.splice(ti,1); // clear any existing trend line
             if(ch._soloIdx===i){
               dss.forEach(d=>{d.backgroundColor=d._color;});
               ch._soloIdx=null;delete ch.options.scales.y.max;
@@ -559,9 +557,6 @@ function mkBarVol(id,labels,data,color='#3b82f6',reviewed=null){
               ch._soloIdx=i;
               const vals=dss[i].data.filter(v=>v!=null&&!isNaN(v));
               ch.options.scales.y.max=vals.length?Math.max(...vals)*1.15:undefined;
-              dss.push({type:'line',label:'Trend',data:linTrend(dss[i].data),
-                borderColor:'#1e293b',borderWidth:2,borderDash:[5,4],pointRadius:0,fill:false,tension:0,
-                _isTrend:true,datalabels:{display:false}});
             }
             ch.update();
           }:undefined

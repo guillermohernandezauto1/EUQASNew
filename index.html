@@ -579,6 +579,12 @@ function renderHeatmap(tab){
     for(const k of allKeys){
       const v=metric==='rv'?grid[rg][k].rv:metric==='pv'?grid[rg][k].pv:grid[rg][k].bd;
       if(v==null){html+=`<td class="hm-empty">—</td>`;continue;}
+      if(metric==='rv'){
+        // Fixed quality bands for % reviewed: <3% bad, 3–5% ok, 5–7% good, >7% great
+        const c=v<0.03?{bg:'#ef4444',fg:'#fff'}:v<0.05?{bg:'#eab308',fg:'#1e293b'}:v<0.07?{bg:'#4ade80',fg:'#1e293b'}:{bg:'#166534',fg:'#fff'};
+        html+=`<td style="background:${c.bg};color:${c.fg}">${(v*100).toFixed(1)}%</td>`;
+        continue;
+      }
       let t=(v-mn)/(mx-mn||1);
       if(metric==='bd')t=1-t;
       const ir=Math.round((1-t)*220+t*20),ig=Math.round((1-t)*50+t*184),ib=Math.round((1-t)*50+t*130);

@@ -105,7 +105,7 @@ canvas.area{max-height:300px}
 
 <div class="tabs">
   <button class="tab-btn active" onclick="showTab('t1')">Quality Trends</button>
-  <button class="tab-btn" onclick="showTab('t3')">Outbound Overbooking</button>
+  <button class="tab-btn" onclick="showTab('t3')">Out Overbooking - 11Labs</button>
   <button class="tab-btn" onclick="showTab('t5')">Review Targets</button>
 </div>
 
@@ -252,10 +252,14 @@ canvas.area{max-height:300px}
     <div class="kpi"><div class="kpi-label">Abandoned Rate</div><div class="kpi-value" id="t3-kpi-ab">—</div><div class="kpi-sub">Abandoned after initial message</div></div>
     <div class="kpi"><div class="kpi-label">Voicemail Not Detected</div><div class="kpi-value" id="t3-kpi-vm">—</div><div class="kpi-sub" id="t3-kpi-vm-sub"></div></div>
   </div>
-  <div class="area-chart-box">
-    <div class="chart-title" id="t3-chart-title">11Labs — Outcome Share</div>
-    <canvas id="t3-area" class="area"></canvas>
-    <div class="chart-note">Click a legend item to solo that outcome. Based on QA-reviewed conversations.</div>
+  <div class="chart-box-full">
+    <div class="chart-title">Quality Trend — % Positive &amp; % Bad+Critical</div>
+    <canvas id="t3-quality" class="tall"></canvas>
+  </div>
+  <div class="chart-box-full">
+    <div class="chart-title">Outcome Distribution — Daily Counts</div>
+    <canvas id="t3-outcomes" class="tall"></canvas>
+    <div class="chart-note">Abandoned, Voicemail not detected, Reschedule + all remaining outcomes grouped as Other. Based on QA-reviewed conversations.</div>
   </div>
 </div>
 
@@ -1054,7 +1058,6 @@ function renderTab3(){
   const gran=document.getElementById('t3-range').value;
   const from=+document.getElementById('t3-from').value;
   const to=+document.getElementById('t3-to').value;
-  // aggregate across selected countries so each period has one data point
   let rows=agg11LabsByKey(
     get11labsRows(gran,t3State.countries).filter(r=>r._key>=from&&r._key<=to)
   );
@@ -1069,19 +1072,18 @@ function renderTab3(){
   // KPIs
   const totalRev=rows.reduce((s,r)=>s+r.gr,0);
   document.getElementById('t3-kpi-total').textContent=fmtNum(totalRev);
+  const scope=t3State.countries.length===1?t3State.countries[0]:`${t3State.countries.length} countries`;
   document.getElementById('t3-kpi-total-sub').textContent=
-    rows.length?`${labels[0]} – ${labels[labels.length-1]} · DE`:'';
+    rows.length?`${labels[0]} – ${labels[labels.length-1]} · ${scope}`:'';
 
-  const totalOut=rows.reduce((s,r)=>{let t=0;for(const o of OUTCOME_META)t+=r[o.key]||0;return s+t;},0);
+  // Outcome totals for KPIs — use all outcome keys, not just OUTCOME_META 3
+  const ALL_OUT_KEYS=['o_rs','o_ca','o_ab','o_nc','o_vm','o_cx','o_in','o_bu','o_re','o_ot','o_al','o_ag','o_cb'];
+  const totalOut=rows.reduce((s,r)=>{let t=0;for(const k of ALL_OUT_KEYS)t+=r[k]||0;return s+t;},0);
   const totalRs=rows.reduce((s,r)=>s+(r.o_rs||0),0);
   const totalAb=rows.reduce((s,r)=>s+(r.o_ab||0),0);
   const totalVm=rows.reduce((s,r)=>s+(r.o_vm||0),0);
 
-  const hasOutcomes=totalOut>0;
-  document.getElementById('t3-chart-title').textContent=
-    gran==='weekly'?'11Labs — Weekly Quality Trend':'11Labs — Outcome Share';
-
-  if(hasOutcomes){
+  if(totalOut>0){
     document.getElementById('t3-kpi-rs').textContent=fmtPct(totalOut>0?totalRs/totalOut:null)+` (${totalRs})`;
     const abRate=totalOut>0?totalAb/totalOut:null;
     const abEl=document.getElementById('t3-kpi-ab');
@@ -1091,36 +1093,74 @@ function renderTab3(){
     const vmEl=document.getElementById('t3-kpi-vm');
     vmEl.textContent=fmtPct(vmRate)+` (${totalVm})`;
     vmEl.className='kpi-value '+negPctColor(vmRate,0.15,0.25);
-
-    // Stacked area — only rows with outcome data
-    const chartRows=rows.filter(r=>OUTCOME_META.some(o=>r[o.key]>0));
-    const chartLabels=chartRows.map(labelFn);
-    const datasets=OUTCOME_META.map(om=>{
-      const counts=chartRows.map(r=>r[om.key]||0);
-      const totals=chartRows.map(r=>{let t=0;for(const o2 of OUTCOME_META)t+=r[o2.key]||0;return t;});
-      const pcts=counts.map((c,i)=>totals[i]>0?c/totals[i]:null);
-      return{label:om.label,data:pcts,_counts:counts,backgroundColor:om.color+'bb',
-        borderColor:om.color,fill:true,borderWidth:1,pointRadius:3};
-    }).filter(ds=>ds.data.some(v=>v>0));
-    mkStackedArea('t3-area',chartLabels,datasets);
   } else {
-    // Weekly: no outcomes — show quality trend + volume
     document.getElementById('t3-kpi-rs').textContent='N/A';
     document.getElementById('t3-kpi-ab').textContent='N/A';
     document.getElementById('t3-kpi-vm').textContent='N/A';
-    dc('t3-area');
-    const ctx=document.getElementById('t3-area')?.getContext('2d');
-    if(ctx){
-      charts['t3-area']=new Chart(ctx,{
-        type:'bar',
-        data:{labels,datasets:[
-          {label:'Reviewed QAs',data:rows.map(r=>r.gr),backgroundColor:'#22c55e88',borderWidth:0},
-        ]},
-        options:{responsive:true,maintainAspectRatio:false,
-          plugins:{legend:{display:true},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtNum(c.raw)}`}}},
-          scales:{x:{ticks:{font:{size:10},maxRotation:45}},y:{ticks:{font:{size:10}}}}}
-      });
-    }
+  }
+
+  // ── Chart 1: Quality trend — two lines: % Positive, % Bad+Critical ──
+  dc('t3-quality');
+  const qCtx=document.getElementById('t3-quality')?.getContext('2d');
+  if(qCtx&&rows.length){
+    charts['t3-quality']=new Chart(qCtx,{
+      type:'line',
+      data:{labels,datasets:[
+        {label:'% Positive',data:rows.map(r=>r.pv!=null?+(r.pv*100).toFixed(1):null),
+          borderColor:'#22c55e',backgroundColor:'#22c55e22',fill:true,tension:0.3,
+          pointRadius:3,borderWidth:2},
+        {label:'% Bad+Critical',data:rows.map(r=>r.bd!=null?+(r.bd*100).toFixed(1):null),
+          borderColor:'#ef4444',backgroundColor:'#ef444422',fill:true,tension:0.3,
+          pointRadius:3,borderWidth:2},
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{
+          legend:{display:true,labels:{font:{size:13}}},
+          tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw}%`}},
+          datalabels:{display:false}
+        },
+        scales:{
+          x:{ticks:{font:{size:11},maxRotation:45}},
+          y:{min:0,max:100,ticks:{font:{size:11},callback:v=>v+'%'}}
+        }
+      }
+    });
+  }
+
+  // ── Chart 2: Outcome counts — grouped bars (Abandoned, Voicemail, Reschedule, Other) ──
+  dc('t3-outcomes');
+  const oCtx=document.getElementById('t3-outcomes')?.getContext('2d');
+  const outcomeRows=rows.filter(r=>ALL_OUT_KEYS.some(k=>r[k]>0));
+  const oLabels=outcomeRows.map(labelFn);
+  if(oCtx&&outcomeRows.length){
+    const abData=outcomeRows.map(r=>r.o_ab||0);
+    const vmData=outcomeRows.map(r=>r.o_vm||0);
+    const rsData=outcomeRows.map(r=>r.o_rs||0);
+    const otData=outcomeRows.map(r=>{
+      let t=0;
+      for(const k of ALL_OUT_KEYS)if(k!=='o_ab'&&k!=='o_vm'&&k!=='o_rs')t+=r[k]||0;
+      return t;
+    });
+    charts['t3-outcomes']=new Chart(oCtx,{
+      type:'bar',
+      data:{labels:oLabels,datasets:[
+        {label:'Abandoned',data:abData,backgroundColor:'#ef444499',borderColor:'#ef4444',borderWidth:1},
+        {label:'Voicemail not detected',data:vmData,backgroundColor:'#f9731699',borderColor:'#f97316',borderWidth:1},
+        {label:'Reschedule',data:rsData,backgroundColor:'#22c55e99',borderColor:'#22c55e',borderWidth:1},
+        {label:'Other',data:otData,backgroundColor:'#94a3b899',borderColor:'#94a3b8',borderWidth:1},
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{
+          legend:{display:true,labels:{font:{size:13}}},
+          tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw}`}},
+          datalabels:{display:false}
+        },
+        scales:{
+          x:{ticks:{font:{size:11},maxRotation:45}},
+          y:{ticks:{font:{size:11}},title:{display:true,text:'Count',font:{size:11}}}
+        }
+      }
+    });
   }
 }
 

@@ -1095,47 +1095,64 @@ function renderTab3(){
     document.getElementById('t3-kpi-vm').textContent='N/A';
   }
 
-  // ── Outcome stacked area — all 13 outcome types ──
+  // ── Outcome 100% stacked bar — all 13 outcome types ──
   dc('t3-outcomes');
   const oCtx=document.getElementById('t3-outcomes')?.getContext('2d');
   const outcomeRows=rows.filter(r=>OUTCOME_META.some(o=>r[o.key]>0));
   const oLabels=outcomeRows.map(labelFn);
+  // Per-period totals for normalisation
+  const periodTotals=outcomeRows.map(r=>OUTCOME_META.reduce((s,o)=>s+(r[o.key]||0),0));
   if(oCtx&&outcomeRows.length){
-    const datasets=OUTCOME_META
-      .filter(om=>outcomeRows.some(r=>r[om.key]>0))
-      .map(om=>({
-        label:om.label,
-        data:outcomeRows.map(r=>r[om.key]||0),
-        backgroundColor:om.color+'cc',
-        borderColor:om.color,
-        borderWidth:1,
-        fill:true,
-        tension:0.3,
-        pointRadius:2,
-      }));
+    const activeOutcomes=OUTCOME_META.filter(om=>outcomeRows.some(r=>r[om.key]>0));
+    const datasets=activeOutcomes.map(om=>({
+      label:om.label,
+      // store raw counts on dataset for tooltip/labels
+      _raw:outcomeRows.map(r=>r[om.key]||0),
+      // value = % of that period's total
+      data:outcomeRows.map((r,i)=>periodTotals[i]>0?+((r[om.key]||0)/periodTotals[i]*100).toFixed(1):0),
+      backgroundColor:om.color+'cc',
+      borderColor:om.color,
+      borderWidth:1,
+    }));
     charts['t3-outcomes']=new Chart(oCtx,{
-      type:'line',
+      type:'bar',
       data:{labels:oLabels,datasets},
       options:{
         responsive:true,maintainAspectRatio:false,
         plugins:{
           legend:{display:true,position:'bottom',labels:{font:{size:12},boxWidth:14,padding:12}},
-          tooltip:{mode:'index',intersect:false,callbacks:{
-            label:c=>c.raw>0?`${c.dataset.label}: ${c.raw}`:null
-          }},
+          tooltip:{
+            mode:'index',intersect:false,
+            callbacks:{
+              label:c=>{
+                const raw=c.dataset._raw[c.dataIndex];
+                if(!raw)return null;
+                return `${c.dataset.label}: ${raw} (${c.raw}%)`;
+              }
+            }
+          },
           datalabels:{
-            display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,
-            formatter:v=>v,
+            display:ctx=>{
+              const raw=ctx.dataset._raw[ctx.dataIndex];
+              return raw>0 && ctx.dataset.data[ctx.dataIndex]>=4;
+            },
+            formatter:(v,ctx)=>{
+              const raw=ctx.dataset._raw[ctx.dataIndex];
+              return `${raw}\n${v}%`;
+            },
             font:{size:10,weight:'600'},
-            color:'#1e293b',
+            color:'#fff',
             anchor:'center',
             align:'center',
             clamp:true,
+            textStrokeColor:'rgba(0,0,0,0.4)',
+            textStrokeWidth:2,
           }
         },
         scales:{
           x:{stacked:true,ticks:{font:{size:11},maxRotation:45}},
-          y:{stacked:true,ticks:{font:{size:11}},title:{display:true,text:'Count',font:{size:11}}}
+          y:{stacked:true,min:0,max:100,ticks:{font:{size:11},callback:v=>v+'%'},
+             title:{display:true,text:'Share of outcomes',font:{size:11}}}
         }
       }
     });

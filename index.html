@@ -1033,7 +1033,7 @@ function initOBCountryPicker(pickerEl,state,onChange){
 
 function get11labsRows(gran,countries){
   const rgs=countries||ELEVENLABS_COUNTRIES;
-  if(gran==='daily') return DAILY.filter(r=>rgs.includes(r.rg)&&r.gr>0);
+  if(gran==='daily') return DAILY.filter(r=>rgs.includes(r.rg)&&r.gr>0&&r.wday!=='Sun');
   if(gran==='weekly') return WEEKLY.filter(r=>r.fl==='11Labs Outbound'&&rgs.includes(r.rg)&&r.yr>=2026&&r.al>0);
   return MONTHLY.filter(r=>r.fl==='11Labs Outbound'&&rgs.includes(r.rg)&&r.yr>=2026&&r.al>0);
 }

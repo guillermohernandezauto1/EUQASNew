@@ -253,13 +253,9 @@ canvas.area{max-height:300px}
     <div class="kpi"><div class="kpi-label">Voicemail Not Detected</div><div class="kpi-value" id="t3-kpi-vm">—</div><div class="kpi-sub" id="t3-kpi-vm-sub"></div></div>
   </div>
   <div class="chart-box-full">
-    <div class="chart-title">Quality Trend — % Positive &amp; % Bad+Critical</div>
-    <canvas id="t3-quality" class="tall"></canvas>
-  </div>
-  <div class="chart-box-full">
     <div class="chart-title">Outcome Distribution — Daily Counts</div>
-    <canvas id="t3-outcomes" class="tall"></canvas>
-    <div class="chart-note">Abandoned, Voicemail not detected, Reschedule + all remaining outcomes grouped as Other. Based on QA-reviewed conversations.</div>
+    <canvas id="t3-outcomes" style="max-height:480px"></canvas>
+    <div class="chart-note">Stacked area — all outcome types. Based on QA-reviewed conversations.</div>
   </div>
 </div>
 
@@ -1099,65 +1095,47 @@ function renderTab3(){
     document.getElementById('t3-kpi-vm').textContent='N/A';
   }
 
-  // ── Chart 1: Quality trend — two lines: % Positive, % Bad+Critical ──
-  dc('t3-quality');
-  const qCtx=document.getElementById('t3-quality')?.getContext('2d');
-  if(qCtx&&rows.length){
-    charts['t3-quality']=new Chart(qCtx,{
-      type:'line',
-      data:{labels,datasets:[
-        {label:'% Positive',data:rows.map(r=>r.pv!=null?+(r.pv*100).toFixed(1):null),
-          borderColor:'#22c55e',backgroundColor:'#22c55e22',fill:true,tension:0.3,
-          pointRadius:3,borderWidth:2},
-        {label:'% Bad+Critical',data:rows.map(r=>r.bd!=null?+(r.bd*100).toFixed(1):null),
-          borderColor:'#ef4444',backgroundColor:'#ef444422',fill:true,tension:0.3,
-          pointRadius:3,borderWidth:2},
-      ]},
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{
-          legend:{display:true,labels:{font:{size:13}}},
-          tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw}%`}},
-          datalabels:{display:false}
-        },
-        scales:{
-          x:{ticks:{font:{size:11},maxRotation:45}},
-          y:{min:0,max:100,ticks:{font:{size:11},callback:v=>v+'%'}}
-        }
-      }
-    });
-  }
-
-  // ── Chart 2: Outcome counts — grouped bars (Abandoned, Voicemail, Reschedule, Other) ──
+  // ── Outcome stacked area — all 13 outcome types ──
   dc('t3-outcomes');
   const oCtx=document.getElementById('t3-outcomes')?.getContext('2d');
-  const outcomeRows=rows.filter(r=>ALL_OUT_KEYS.some(k=>r[k]>0));
+  const outcomeRows=rows.filter(r=>OUTCOME_META.some(o=>r[o.key]>0));
   const oLabels=outcomeRows.map(labelFn);
   if(oCtx&&outcomeRows.length){
-    const abData=outcomeRows.map(r=>r.o_ab||0);
-    const vmData=outcomeRows.map(r=>r.o_vm||0);
-    const rsData=outcomeRows.map(r=>r.o_rs||0);
-    const otData=outcomeRows.map(r=>{
-      let t=0;
-      for(const k of ALL_OUT_KEYS)if(k!=='o_ab'&&k!=='o_vm'&&k!=='o_rs')t+=r[k]||0;
-      return t;
-    });
+    const datasets=OUTCOME_META
+      .filter(om=>outcomeRows.some(r=>r[om.key]>0))
+      .map(om=>({
+        label:om.label,
+        data:outcomeRows.map(r=>r[om.key]||0),
+        backgroundColor:om.color+'cc',
+        borderColor:om.color,
+        borderWidth:1,
+        fill:true,
+        tension:0.3,
+        pointRadius:2,
+      }));
     charts['t3-outcomes']=new Chart(oCtx,{
-      type:'bar',
-      data:{labels:oLabels,datasets:[
-        {label:'Abandoned',data:abData,backgroundColor:'#ef444499',borderColor:'#ef4444',borderWidth:1},
-        {label:'Voicemail not detected',data:vmData,backgroundColor:'#f9731699',borderColor:'#f97316',borderWidth:1},
-        {label:'Reschedule',data:rsData,backgroundColor:'#22c55e99',borderColor:'#22c55e',borderWidth:1},
-        {label:'Other',data:otData,backgroundColor:'#94a3b899',borderColor:'#94a3b8',borderWidth:1},
-      ]},
-      options:{responsive:true,maintainAspectRatio:false,
+      type:'line',
+      data:{labels:oLabels,datasets},
+      options:{
+        responsive:true,maintainAspectRatio:false,
         plugins:{
-          legend:{display:true,labels:{font:{size:13}}},
-          tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw}`}},
-          datalabels:{display:false}
+          legend:{display:true,position:'bottom',labels:{font:{size:12},boxWidth:14,padding:12}},
+          tooltip:{mode:'index',intersect:false,callbacks:{
+            label:c=>c.raw>0?`${c.dataset.label}: ${c.raw}`:null
+          }},
+          datalabels:{
+            display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,
+            formatter:v=>v,
+            font:{size:10,weight:'600'},
+            color:'#1e293b',
+            anchor:'center',
+            align:'center',
+            clamp:true,
+          }
         },
         scales:{
-          x:{ticks:{font:{size:11},maxRotation:45}},
-          y:{ticks:{font:{size:11}},title:{display:true,text:'Count',font:{size:11}}}
+          x:{stacked:true,ticks:{font:{size:11},maxRotation:45}},
+          y:{stacked:true,ticks:{font:{size:11}},title:{display:true,text:'Count',font:{size:11}}}
         }
       }
     });

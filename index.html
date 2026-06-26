@@ -151,7 +151,7 @@ canvas.area{max-height:300px}
     <div class="heatmap-controls">
       <span style="font-size:13px;font-weight:600;color:#475569" id="t1-heatmap-title">Heatmap — Last 12 Months · All Countries</span>
       <div class="filter-group"><select id="t1-hm-metric" onchange="renderHeatmap('t1')">
-        <option value="rv">% Reviewed</option><option value="pv">% Positive</option><option value="bd">% Bad+Critical</option>
+        <option value="rv">% Reviewed</option><option value="pv">% Positive</option><option value="bd">% Bad+Critical</option><option value="cr">% Critical</option>
       </select></div>
     </div>
     <div id="t1-heatmap"></div>
@@ -206,7 +206,7 @@ canvas.area{max-height:300px}
     <div class="heatmap-controls">
       <span style="font-size:13px;font-weight:600;color:#475569" id="t2-heatmap-title">Heatmap — Last 12 Weeks · All Countries</span>
       <div class="filter-group"><select id="t2-hm-metric" onchange="renderHeatmap('t2')">
-        <option value="pv">% Positive</option><option value="rv">% Reviewed</option><option value="bd">% Bad+Critical</option>
+        <option value="pv">% Positive</option><option value="rv">% Reviewed</option><option value="bd">% Bad+Critical</option><option value="cr">% Critical</option>
       </select></div>
     </div>
     <div id="t2-heatmap"></div>
@@ -359,7 +359,7 @@ function weightedAgg(rows){
     if(r.pv!=null&&r.gr>0){pvS+=r.pv*r.gr;bdS+=((r.bd||0)+(r.cr||0))*r.gr;}
     qgr+=r.qgr||0;qgo+=r.qgo||0;qok+=r.qok||0;qbd+=r.qbd||0;qcr+=r.qcr||0;
   }
-  return{rev,all,pv:rev>0?pvS/rev:null,bd:rev>0?bdS/rev:null,rv:all>0?rev/all:null,qgr,qgo,qok,qbd,qcr};
+  return{rev,all,pv:rev>0?pvS/rev:null,bd:rev>0?bdS/rev:null,cr:rev>0?qcr/rev:null,rv:all>0?rev/all:null,qgr,qgo,qok,qbd,qcr};
 }
 
 function aggByKey(rows,keyFn){
@@ -635,9 +635,16 @@ function renderHeatmap(tab){
       grid[rg][k]=weightedAgg(data.filter(r=>r.rg===rg&&r._key===k));
     }
   }
+  function hmVal(cell){
+    if(metric==='rv')return cell.rv;
+    if(metric==='pv')return cell.pv;
+    if(metric==='bd')return cell.bd;
+    if(metric==='cr')return cell.cr;
+    return null;
+  }
   const vals=[];
   for(const rg of rgs)for(const k of allKeys){
-    const v=metric==='rv'?grid[rg][k].rv:metric==='pv'?grid[rg][k].pv:grid[rg][k].bd;
+    const v=hmVal(grid[rg][k]);
     if(v!=null)vals.push(v);
   }
   const mn=vals.length?Math.min(...vals):0,mx=vals.length?Math.max(...vals):1;
@@ -647,16 +654,17 @@ function renderHeatmap(tab){
   for(const rg of rgs){
     html+=`<tr><td>${rg}</td>`;
     for(const k of allKeys){
-      const v=metric==='rv'?grid[rg][k].rv:metric==='pv'?grid[rg][k].pv:grid[rg][k].bd;
+      const v=hmVal(grid[rg][k]);
       if(v==null){html+=`<td class="hm-empty">—</td>`;continue;}
       if(metric==='rv'){
-        // Fixed quality bands for % reviewed: <3% bad, 3–5% ok, 5–7% good, >7% great
+        // Fixed quality bands: <3% bad, 3–5% ok, 5–7% good, >7% great
         const c=v<0.03?{bg:'#ef4444',fg:'#fff'}:v<0.05?{bg:'#eab308',fg:'#1e293b'}:v<0.07?{bg:'#4ade80',fg:'#1e293b'}:{bg:'#166534',fg:'#fff'};
         html+=`<td style="background:${c.bg};color:${c.fg}">${(v*100).toFixed(1)}%</td>`;
         continue;
       }
+      // cr and bd: lower is better (invert gradient); pv: higher is better
       let t=(v-mn)/(mx-mn||1);
-      if(metric==='bd')t=1-t;
+      if(metric==='bd'||metric==='cr')t=1-t;
       const ir=Math.round((1-t)*220+t*20),ig=Math.round((1-t)*50+t*184),ib=Math.round((1-t)*50+t*130);
       const luma=0.299*ir/255+0.587*ig/255+0.114*ib/255;
       html+=`<td style="background:rgb(${ir},${ig},${ib});color:${luma>0.5?'#111':'#eee'}">${(v*100).toFixed(1)}%</td>`;

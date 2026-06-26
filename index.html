@@ -261,24 +261,17 @@ canvas.area{max-height:300px}
 
 <!-- ===== TAB 5: REVIEW TARGETS (Control sheet editor) ===== -->
 <div id="t5" class="tab-content">
-  <div class="info-note">
-    Edit the <b>Amount</b> (conversations to review per Country × Group; 999 = review all, blank = none) and the <b>Pause</b> toggle, then click
-    <b>Copy updated table</b> and paste it into the <b>Control</b> sheet at cell <b>A1</b> (or use <b>Download CSV</b>).
-    These values drive how many conversations the team has to review. Snapshot loaded from the sheet on <span id="t5-asof"></span>.
-  </div>
-  <div class="ctrl-toolbar">
-    <div class="filter-group"><label>Country</label><select id="t5-country" onchange="renderControl()"></select></div>
-    <div class="filter-group"><label>Group</label><select id="t5-group" onchange="renderControl()"></select></div>
-    <div class="filter-group"><label>&nbsp;</label><button class="btn-ghost" onclick="resetControl()">Revert all</button></div>
-  </div>
-  <table class="ctrl-table">
-    <thead><tr><th>Country</th><th>Group</th><th style="text-align:right">Amount</th><th>Pause</th><th>Reference Script</th></tr></thead>
-    <tbody id="t5-body"></tbody>
-  </table>
-  <div class="ctrl-savebar">
-    <button class="btn-primary" id="t5-copy" onclick="copyControl()">Copy updated table</button>
-    <button class="btn-ghost" onclick="downloadControlCsv()">Download CSV</button>
-    <span class="ctrl-status" id="t5-status">No changes</span>
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:20px;text-align:center;">
+    <div style="font-size:15px;color:#475569;max-width:480px;line-height:1.6;">
+      Review targets are managed in the <b>Control</b> Google Sheet. Changes there are picked up automatically by the QA pipeline.
+    </div>
+    <a href="https://docs.google.com/spreadsheets/d/1Y8bKSQZKvkCt78QoTGh0kTtKHJyHJPmbNJMbaWNOIBw/edit?gid=0#gid=0"
+       target="_blank" rel="noopener"
+       style="display:inline-flex;align-items:center;gap:10px;padding:14px 28px;background:#1e293b;color:#fff;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;transition:background .15s;"
+       onmouseover="this.style.background='#334155'" onmouseout="this.style.background='#1e293b'">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      Open Control Sheet
+    </a>
   </div>
 </div>
 
